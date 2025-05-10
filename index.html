@@ -6,15 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <script defer src="./scripts/script.js"></script>
+    <style>
+        * {
+            touch-action: none;
+            user-select: none;
+        }
+    </style>
 </head>
 
-<body>
-    <div id="checker-bg" class="absolute -z-10" style="
-  background: 
-    repeating-conic-gradient(#fff 0 25%, #777 0 50%) 
-      50% / 32px 32px
-">
-    </div>
+<body class="overflow-hidden">
     <div id="create-panel"
         class="absolute left-1/2 top-1/2 flex h-32 w-48 -translate-x-1/2 -translate-y-1/2 flex-col flex-wrap items-center justify-center gap-2 rounded-2xl bg-[#333]">
         <div class="flex items-center flex-row gap-1">
@@ -30,6 +30,16 @@
             class="h-8 w-24 rounded-lg bg-[#777] ring-inset ring-[#0003] hover:ring-2 active:bg-[#555] text-black">
             Create
         </button>
+    </div>
+    <div id="bground" class="overflow-hidden h-screen">
+        <div id="bgorigin" class="absolute">
+            <div id="checker-bg" class="absolute -translate-x-1/2 -translate-y-1/2" style="
+                background: 
+                    repeating-conic-gradient(#fff 0 25%, #777 0 50%) 
+                    50% / 32px 32px
+                ">
+            </div>
+        </div>
     </div>
 </body>
 

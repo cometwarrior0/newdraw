@@ -1,13 +1,17 @@
+
 console.log("Hello World");
-const checkerbg = document.getElementById('checker-bg');
 const dpr = window.devicePixelRatio || 1;
 
 const canvas = document.createElement('canvas');
 const gl = canvas.getContext('webgl2', { antialias: false, alpha: true });
 
 document.getElementById('create-button').addEventListener('click', () => {
-    const x = Math.round(document.getElementById('width-input').value / dpr);
-    const y = Math.round(document.getElementById('height-input').value / dpr);
+    const checkerbg = document.getElementById('checker-bg');
+
+    // const x = Math.round(document.getElementById('width-input').value / dpr);
+    // const y = Math.round(document.getElementById('height-input').value / dpr);
+    const x = Math.round(document.getElementById('width-input').value);
+    const y = Math.round(document.getElementById('height-input').value);
 
     if (isNaN(x) || isNaN(y)) {
         alert("Invalid dimensions, please enter valid numbers");
@@ -17,90 +21,253 @@ document.getElementById('create-button').addEventListener('click', () => {
     checkerbg.style.width = x + 'px';
     checkerbg.style.height = y + 'px';
 
-    checkerbg.style.left = `calc(50vw - (0.5 * ${x}px)`;
-    checkerbg.style.top = `calc(50vh - (0.5 * ${y}px)`;
+    // checkerbg.style.left = `calc(50vw - (0.5 * ${x}px)`;
+    // checkerbg.style.top = `calc(50vh - (0.5 * ${y}px)`;
+
+    // checkerbg.style.left = `calc(max(0px, (100% - ${x}px)*0.5))`;
+    // checkerbg.style.top = `calc(max(0px, (100% - ${y}px)*0.5))`;
+
+    document.getElementById('bgorigin').style.transform = `translate(50vw, 50vh)`
 
     canvas.width = x;
     canvas.height = y;
+
     // ctx.scale(1 / dpr, 1 / dpr);
+
     checkerbg.appendChild(canvas);
+
     gl.clearColor(0, 0.5, 1.0, 1.0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     gl.viewport(0, 0, canvas.width, canvas.height);
-    shadertmp();
+
+    test(x, y);
+
+    scrollBackground();
 
     document.getElementById('create-panel').remove();
+    // window.getSelection().removeAllRanges(); // Clear any existing selection
 });
 
-let vertexShaderText = `
-precision mediump float;
 
-attribute vec2 vertPosition;
+// const scrollBackground = () => {
+//     const bground = document.getElementById('bground');
+//     const bgorig = document.getElementById('bgorigin');
 
-void main(){
-    gl_Position = vec4(vertPosition, 0.0, 1.0);
-}
-`;
+//     // Center the origin element
+//     bgorig.style.left = `50%`;
+//     bgorig.style.top = `50%`;
 
-let fragmentShaderText = `
-precision mediump float;
+//     const activePointers = new Map(); // Object to store per-pointer state
 
-void main(){
-    gl_FragColor = vec4(1.0,0.0,0.0,1.0);
-}
-`
+//     function beginPan(e) {
+//         activePointers.set(e.pointerId, {
+//             clientX: e.clientX,
+//             clientY: e.clientY,
+//         });
+//     }
 
-function shadertmp() {
-    let vertexShader = gl.createShader(gl.VERTEX_SHADER);
-    let fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+//     function handlePan(e) {
+//         if (!activePointers.has(e.pointerId)) return;
 
-    gl.shaderSource(vertexShader, vertexShaderText);
-    gl.shaderSource(fragmentShader, fragmentShaderText);
-    gl.compileShader(vertexShader);
-    if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS))
-        console.warn("ERROR COMPILING VERTEX SHADER: " + gl.getShaderInfoLog(vertexShader));
+//         const data = activePointers.get(e.pointerId);
 
-    gl.compileShader(fragmentShader);
-    if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS))
-        console.warn("ERROR COMPILING VERTEX SHADER: " + gl.getShaderInfoLog(vertexShader));
+//         // Calculate delta using the current stored values
+//         const deltaX = e.clientX - data.clientX;
+//         const deltaY = e.clientY - data.clientY;
 
-    let program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
+//         // Update the element's position
+//         bgorig.style.left = `${bgorig.offsetLeft + deltaX}px`;
+//         bgorig.style.top = `${bgorig.offsetTop + deltaY}px`;
+
+//         // Update the existing pointer data
+//         data.clientX = e.clientX;
+//         data.clientY = e.clientY;
+//     }
+
+//     function endPan(e) {
+//         activePointers.delete(e.pointerId);
+//     }
+
+//     bground.addEventListener("pointerdown", beginPan);
+//     document.addEventListener("pointermove", handlePan);
+//     document.addEventListener("pointerup", endPan);
+//     document.addEventListener("pointercancel", endPan);
+
+//     // scroll --^
+//     //
+//     //  zoom ---v
+
+//     let scale = 1;
+//     const snapValues = [0.0625, 0.125, 0.25, 1, 2, 4, 8, 16, 32];
+//     const tolerance = 0.05;
+
+//     function handleZoom(e) {
+//         const oldscale = scale;
+//         scale = scale * Math.pow(2, (-e.deltaY) * 0.001);
+//         for (val of snapValues) {
+//             if (Math.abs(1 - scale / val) > tolerance) continue;
+//             scale = val;
+//             break;
+//         }
+//         bgorig.style.scale = `${scale}`;
+
+//         // change offsets so that transform origin is on top of cursor (magic function tbh)
+//         const newxoff = e.clientX - (e.clientX - bgorig.offsetLeft) * (scale / oldscale);
+//         const newyoff = e.clientY - (e.clientY - bgorig.offsetTop) * (scale / oldscale);
+
+//         bgorig.style.left = `${newxoff}px`;
+//         bgorig.style.top = `${newyoff}px`;
+//     }
+
+//     bground.addEventListener("wheel", handleZoom);
+// };
+
+
+const scrollBackground = () => {
+    const bground = document.getElementById('bground');
+    const bgorig = document.getElementById('bgorigin');
+
+    const bgbcr = bgorig.getBoundingClientRect();
+    let transX = bgbcr.left;
+    let transY = bgbcr.top;
+
+    const activePointers = new Map(); // Object to store per-pointer state
+
+    function beginPan(e) {
+        activePointers.set(e.pointerId, {
+            clientX: e.clientX,
+            clientY: e.clientY,
+        });
+    }
+
+    function handlePan(e) {
+        if (!activePointers.has(e.pointerId)) return;
+
+        const data = activePointers.get(e.pointerId);
+
+        // Calculate delta using the current stored values
+        const deltaX = e.clientX - data.clientX;
+        const deltaY = e.clientY - data.clientY;
+
+        // Update the global translation state
+        transX += deltaX;
+        transY += deltaY;
+
+        // Update the element's position
+        // bgorig.style.transitionDuration = '0ms';
+        bgorig.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
+
+        // Update the existing pointer data
+        data.clientX = e.clientX;
+        data.clientY = e.clientY;
+    }
+
+    function endPan(e) {
+        activePointers.delete(e.pointerId);
+    }
+
+    bground.addEventListener("pointerdown", beginPan);
+    document.addEventListener("pointermove", handlePan);
+    document.addEventListener("pointerup", endPan);
+    document.addEventListener("pointercancel", endPan);
+
+    // scroll --^
+    //
+    //  zoom ---v
+
+    let scale = 1;
+    const snapValues = [0.0625, 0.125, 0.25, 1, 2, 4, 8, 16, 32];
+    const tolerance = 0.05;
+
+    function handleZoom(e) {
+        const oldscale = scale;
+        scale = scale * Math.pow(2, (-e.deltaY) * 0.0015);
+
+        // Snap to one of your predefined snap values if close enough:
+        for (val of snapValues) {
+            if (Math.abs(1 - scale / val) > tolerance) continue;
+            scale = val;
+            break;
+        }
+
+        // Adjust the translation offsets so that the zoom is centered on the pointer.
+        transX = e.clientX - (e.clientX - transX) * (scale / oldscale);
+        transY = e.clientY - (e.clientY - transY) * (scale / oldscale);
+
+        // Apply both translate and scale in a single transform.
+        // bgorig.style.transitionDuration = '100ms';
+        bgorig.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
+    }
+
+    bground.addEventListener("wheel", handleZoom);
+};
+
+
+function test(x, y) {
+    // Vertex Shader (Just passes positions)
+    const vsSource = /*glsl*/`
+    attribute vec2 a_position;
+    void main() {
+        gl_Position = vec4(a_position, 0.0, 1.0);
+    }
+    `;
+
+    // Fragment Shader (Determines circle using distance)
+    const fsSource = /*glsl*/`
+    precision mediump float;
+    uniform vec2 u_resolution; // Define resolution as a uniform
+
+    void main() {
+        vec2 fragCoord = gl_FragCoord.xy; // Use raw pixel coordinates
+        vec2 center = u_resolution * 0.5; // Center of the screen in pixels
+        float pct = distance(fragCoord, center); // Distance from center
+        vec4 col = vec4(pct);
+        col = 1. - smoothstep(25., 26., col);
+
+        gl_FragColor = col;
+    }
+    `;
+
+    // Create and link shader program
+    const vs = compileShader(gl, vsSource, gl.VERTEX_SHADER);
+    const fs = compileShader(gl, fsSource, gl.FRAGMENT_SHADER);
+    const program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
     gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-        console.warn("ERROR LINKING PROGRAM: " + gl.getProgramInfoLog(program));
-    gl.validateProgram(program);
-    if (!gl.getProgramParameter(program, gl.VALIDATE_STATUS))
-        console.warn("ERROR VALIDATING PROGRAM: " + gl.getProgramInfoLog(program));
-
-    //
-    // Create buffer
-    //
-
-    let triangleVertices =
-        new Float32Array([ // X, Y
-            0.0, 0.5,
-            -0.5, -0.5,
-            0.5, -0.5
-        ])
-
-    let triangleVertexBufferObject = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexBufferObject);
-    gl.bufferData(gl.ARRAY_BUFFER, triangleVertices, gl.STATIC_DRAW);
-
-    let positionAttribLocation = gl.getAttribLocation(program, 'vertPosition');
-    gl.vertexAttribPointer(positionAttribLocation, // Attribute location
-        2, // Number of elements per attribute (X,Y)
-        gl.FLOAT, // Type of each component
-        false, // Normalized? (bool)
-        2 * Float32Array.BYTES_PER_ELEMENT, // Size of an individual vertex
-        0
-    ); // Offset from the beginning of a single vertex to this attribute
-
-    gl.enableVertexAttribArray(positionAttribLocation);
-
     gl.useProgram(program);
-    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // Set the uniform resolution value after using the program
+    const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+    gl.uniform2f(resolutionLocation, canvas.width, canvas.height);
+
+    // Helper function to compile shaders
+    function compileShader(gl, source, type) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        return shader;
+    }
+
+    // Quad vertices covering the entire screen
+    const positions = new Float32Array([
+        -1, -1, 1, -1, -1, 1,
+        -1, 1, 1, -1, 1, 1
+    ]);
+
+
+    // Create buffer and bind attributes
+    const buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+    const positionLocation = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // Draw the full-screen quad
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
 }

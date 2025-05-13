@@ -139,6 +139,7 @@ const scrollBackground = () => {
             clientX: e.clientX,
             clientY: e.clientY,
         });
+        document.addEventListener("pointermove", handlePan);
     }
 
     function handlePan(e) {
@@ -156,7 +157,7 @@ const scrollBackground = () => {
 
         // Update the element's position
         // bgorig.style.transitionDuration = '0ms';
-        bgorig.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
+        bgorig.style.transform = `translate(${transX}px, ${transY}px) scale(${currentZoom})`;
 
         // Update the existing pointer data
         data.clientX = e.clientX;
@@ -165,10 +166,12 @@ const scrollBackground = () => {
 
     function endPan(e) {
         activePointers.delete(e.pointerId);
+        if (activePointers.size === 0) {
+            document.removeEventListener("pointermove", handlePan);
+        }
     }
 
     bground.addEventListener("pointerdown", beginPan);
-    document.addEventListener("pointermove", handlePan);
     document.addEventListener("pointerup", endPan);
     document.addEventListener("pointercancel", endPan);
 
@@ -176,28 +179,31 @@ const scrollBackground = () => {
     //
     //  zoom ---v
 
-    let scale = 1;
-    const snapValues = [0.0625, 0.125, 0.25, 1, 2, 4, 8, 16, 32];
-    const tolerance = 0.05;
+    let rawZoom = 1, currentZoom = 1;
+    const snapValues = [1 / 16, 1 / 12, 1 / 8, 1 / 6, 1 / 4, 1 / 3, 1 / 2, 1 / 1.5, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32];
+    const tolerance = 0.0625;
 
     function handleZoom(e) {
-        const oldscale = scale;
-        scale = scale * Math.pow(2, (-e.deltaY) * 0.0015);
+        // e.preventDefault();
+        const oldZoom = currentZoom;
+        rawZoom = rawZoom * Math.pow(2, (-e.deltaY) * 0.002);
+        currentZoom = rawZoom;
 
         // Snap to one of your predefined snap values if close enough:
-        for (val of snapValues) {
-            if (Math.abs(1 - scale / val) > tolerance) continue;
-            scale = val;
+        for (const snap of snapValues) {
+            const zoomSnapDiff = Math.abs(1 - rawZoom / snap);
+            if (zoomSnapDiff > tolerance) continue;
+            currentZoom = snap;
             break;
         }
 
         // Adjust the translation offsets so that the zoom is centered on the pointer.
-        transX = e.clientX - (e.clientX - transX) * (scale / oldscale);
-        transY = e.clientY - (e.clientY - transY) * (scale / oldscale);
+        transX = e.clientX - (e.clientX - transX) * (currentZoom / oldZoom);
+        transY = e.clientY - (e.clientY - transY) * (currentZoom / oldZoom);
 
         // Apply both translate and scale in a single transform.
         // bgorig.style.transitionDuration = '100ms';
-        bgorig.style.transform = `translate(${transX}px, ${transY}px) scale(${scale})`;
+        bgorig.style.transform = `translate(${transX}px, ${transY}px) scale(${currentZoom})`;
     }
 
     bground.addEventListener("wheel", handleZoom);

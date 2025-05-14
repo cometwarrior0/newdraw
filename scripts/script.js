@@ -1,9 +1,10 @@
-
 console.log("Hello World");
 const dpr = window.devicePixelRatio || 1;
 
 const canvas = document.createElement('canvas');
 const gl = canvas.getContext('webgl2', { antialias: false, alpha: true });
+
+const bground = document.getElementById('bground');
 
 document.getElementById('create-button').addEventListener('click', () => {
     const checkerbg = document.getElementById('checker-bg');
@@ -43,6 +44,7 @@ document.getElementById('create-button').addEventListener('click', () => {
 
     test(x, y);
 
+    // bgPointerPos();
     scrollBackground();
 
     document.getElementById('create-panel').remove();
@@ -50,82 +52,75 @@ document.getElementById('create-button').addEventListener('click', () => {
 });
 
 
-// const scrollBackground = () => {
-//     const bground = document.getElementById('bground');
-//     const bgorig = document.getElementById('bgorigin');
+// THIS PART WIP, NOT USED YET!!!
 
-//     // Center the origin element
-//     bgorig.style.left = `50%`;
-//     bgorig.style.top = `50%`;
+const activePointers = new Map();
 
-//     const activePointers = new Map(); // Object to store per-pointer state
+const bgPointerPos = () => {
+    function handleDown(e) {
+        activePointers.set(e.pointerId, {
+            pointerType: e.pointerType,
+            startX: e.clientX,
+            startY: e.clientY,
+            prevX: e.clientX,
+            prevY: e.clientY,
+            x: e.clientX,
+            y: e.clientY,
+            deltaX: 0,
+            deltaY: 0,
+            totalDeltaX: 0,
+            totalDeltaY: 0,
+            lastUpdate: Date.now(), // Track last update time
+        });
+    }
 
-//     function beginPan(e) {
-//         activePointers.set(e.pointerId, {
-//             clientX: e.clientX,
-//             clientY: e.clientY,
-//         });
-//     }
+    function handleMove(e) {
+        if (!activePointers.has(e.pointerId)) return;
 
-//     function handlePan(e) {
-//         if (!activePointers.has(e.pointerId)) return;
+        const prevPointer = activePointers.get(e.pointerId);
 
-//         const data = activePointers.get(e.pointerId);
+        activePointers.set(e.pointerId, {
+            ...prevPointer, // adds values from previous pointer so that startX startY pointerType are preserved
+            prevX: prevPointer.x,
+            prevY: prevPointer.y,
+            x: e.clientX,
+            y: e.clientY,
+            deltaX: e.clientX - prevPointer.x,
+            deltaY: e.clientY - prevPointer.y,
+            totalDeltaX: e.clientX - prevPointer.startX,
+            totalDeltaY: e.clientY - prevPointer.startY,
+            lastUpdate: Date.now(), // Track last update time
+        });
+    }
 
-//         // Calculate delta using the current stored values
-//         const deltaX = e.clientX - data.clientX;
-//         const deltaY = e.clientY - data.clientY;
+    function handleUp(e) {
+        activePointers.delete(e.pointerId);
+    }
 
-//         // Update the element's position
-//         bgorig.style.left = `${bgorig.offsetLeft + deltaX}px`;
-//         bgorig.style.top = `${bgorig.offsetTop + deltaY}px`;
+    // Cleanup function to remove old pointers
+    function cleanUpPointers(timeout = 8000) {
+        const now = Date.now();
+        activePointers.forEach((pointer, id) => {
+            if (now - pointer.lastUpdate > timeout) {
+                console.log(activePointers.get(id));
+                activePointers.delete(id);
+                console.log(activePointers.get(id));
+            }
+        });
+    }
 
-//         // Update the existing pointer data
-//         data.clientX = e.clientX;
-//         data.clientY = e.clientY;
-//     }
+    // Run cleanup periodically
+    setInterval(() => cleanUpPointers(), 8000);
 
-//     function endPan(e) {
-//         activePointers.delete(e.pointerId);
-//     }
+    bground.addEventListener('pointerdown', handleDown);
+    document.addEventListener('pointermove', handleMove);
+    document.addEventListener('pointerup', handleUp);
+    document.addEventListener('pointercancel', handleUp);
 
-//     bground.addEventListener("pointerdown", beginPan);
-//     document.addEventListener("pointermove", handlePan);
-//     document.addEventListener("pointerup", endPan);
-//     document.addEventListener("pointercancel", endPan);
-
-//     // scroll --^
-//     //
-//     //  zoom ---v
-
-//     let scale = 1;
-//     const snapValues = [0.0625, 0.125, 0.25, 1, 2, 4, 8, 16, 32];
-//     const tolerance = 0.05;
-
-//     function handleZoom(e) {
-//         const oldscale = scale;
-//         scale = scale * Math.pow(2, (-e.deltaY) * 0.001);
-//         for (val of snapValues) {
-//             if (Math.abs(1 - scale / val) > tolerance) continue;
-//             scale = val;
-//             break;
-//         }
-//         bgorig.style.scale = `${scale}`;
-
-//         // change offsets so that transform origin is on top of cursor (magic function tbh)
-//         const newxoff = e.clientX - (e.clientX - bgorig.offsetLeft) * (scale / oldscale);
-//         const newyoff = e.clientY - (e.clientY - bgorig.offsetTop) * (scale / oldscale);
-
-//         bgorig.style.left = `${newxoff}px`;
-//         bgorig.style.top = `${newyoff}px`;
-//     }
-
-//     bground.addEventListener("wheel", handleZoom);
-// };
+}
 
 
 const scrollBackground = () => {
-    const bground = document.getElementById('bground');
     const bgorig = document.getElementById('bgorigin');
 
     const bgbcr = bgorig.getBoundingClientRect();
@@ -147,22 +142,28 @@ const scrollBackground = () => {
 
         const data = activePointers.get(e.pointerId);
 
-        // Calculate delta using the current stored values
+        // Calculate pointer delta for translation.
         const deltaX = e.clientX - data.clientX;
         const deltaY = e.clientY - data.clientY;
 
-        // Update the global translation state
+        // Update global state
         transX += deltaX;
         transY += deltaY;
 
-        // Update the element's position
-        // bgorig.style.transitionDuration = '0ms';
-        bgorig.style.transform = `translate(${transX}px, ${transY}px) scale(${currentZoom})`;
+        // Construct the transform.
+        bgorig.style.transform = `
+        translate(${transX}px, ${transY}px)
+        scale(${currentZoom})
+        `;
+        // const abc = bgorig.getBoundingClientRect();
+        // transX = abc.left;
+        // transY = abc.top;
 
-        // Update the existing pointer data
+        // Update pointer data for next event.
         data.clientX = e.clientX;
         data.clientY = e.clientY;
     }
+
 
     function endPan(e) {
         activePointers.delete(e.pointerId);
@@ -198,8 +199,8 @@ const scrollBackground = () => {
         }
 
         // Adjust the translation offsets so that the zoom is centered on the pointer.
-        transX = e.clientX - (e.clientX - transX) * (currentZoom / oldZoom);
-        transY = e.clientY - (e.clientY - transY) * (currentZoom / oldZoom);
+        transX = bground.dataset.x - (bground.dataset.x - transX) * (currentZoom / oldZoom);
+        transY = bground.dataset.y - (bground.dataset.y - transY) * (currentZoom / oldZoom);
 
         // Apply both translate and scale in a single transform.
         // bgorig.style.transitionDuration = '100ms';

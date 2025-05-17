@@ -1,3 +1,4 @@
+
 console.log("Hello World");
 const dpr = window.devicePixelRatio || 1;
 
@@ -28,7 +29,7 @@ document.getElementById('create-button').addEventListener('click', () => {
     // checkerbg.style.left = `calc(max(0px, (100% - ${x}px)*0.5))`;
     // checkerbg.style.top = `calc(max(0px, (100% - ${y}px)*0.5))`;
 
-    document.getElementById('bgorigin').style.transform = `translate(50vw, 50vh)`
+    document.getElementById('bgorigin').style.transform = `translate(${bground.offsetWidth / 2}px, ${bground.offsetHeight / 2}px)`
 
     canvas.width = x;
     canvas.height = y;
@@ -44,7 +45,7 @@ document.getElementById('create-button').addEventListener('click', () => {
 
     test(x, y);
 
-    // bgPointerPos();
+    bgPointerPos();
     scrollBackground();
 
     document.getElementById('create-panel').remove();
@@ -52,9 +53,9 @@ document.getElementById('create-button').addEventListener('click', () => {
 });
 
 
-// THIS PART WIP, NOT USED YET!!!
-
 const activePointers = new Map();
+let pointerX = 0;
+let pointerY = 0;
 
 const bgPointerPos = () => {
     function handleDown(e) {
@@ -75,9 +76,11 @@ const bgPointerPos = () => {
     }
 
     function handleMove(e) {
-        if (!activePointers.has(e.pointerId)) return;
+        pointerX = e.clientX;
+        pointerY = e.clientY;
 
         const prevPointer = activePointers.get(e.pointerId);
+        if (!prevPointer) return;
 
         activePointers.set(e.pointerId, {
             ...prevPointer, // adds values from previous pointer so that startX startY pointerType are preserved
@@ -98,19 +101,17 @@ const bgPointerPos = () => {
     }
 
     // Cleanup function to remove old pointers
-    function cleanUpPointers(timeout = 8000) {
+    function cleanUpPointers(timeout = 10000) {
         const now = Date.now();
         activePointers.forEach((pointer, id) => {
             if (now - pointer.lastUpdate > timeout) {
-                console.log(activePointers.get(id));
                 activePointers.delete(id);
-                console.log(activePointers.get(id));
             }
         });
     }
 
     // Run cleanup periodically
-    setInterval(() => cleanUpPointers(), 8000);
+    setInterval(() => cleanUpPointers(), 10000);
 
     bground.addEventListener('pointerdown', handleDown);
     document.addEventListener('pointermove', handleMove);
@@ -127,85 +128,88 @@ const scrollBackground = () => {
     let transX = bgbcr.left;
     let transY = bgbcr.top;
 
-    const activePointers = new Map(); // Object to store per-pointer state
-
-    function beginPan(e) {
-        activePointers.set(e.pointerId, {
-            clientX: e.clientX,
-            clientY: e.clientY,
-        });
-        document.addEventListener("pointermove", handlePan);
-    }
-
     function handlePan(e) {
-        if (!activePointers.has(e.pointerId)) return;
-
         const data = activePointers.get(e.pointerId);
-
-        // Calculate pointer delta for translation.
-        const deltaX = e.clientX - data.clientX;
-        const deltaY = e.clientY - data.clientY;
+        if (!data) return;
 
         // Update global state
-        transX += deltaX;
-        transY += deltaY;
+        transX += data.deltaX;
+        transY += data.deltaY;
 
         // Construct the transform.
         bgorig.style.transform = `
         translate(${transX}px, ${transY}px)
         scale(${currentZoom})
         `;
-        // const abc = bgorig.getBoundingClientRect();
-        // transX = abc.left;
-        // transY = abc.top;
-
-        // Update pointer data for next event.
-        data.clientX = e.clientX;
-        data.clientY = e.clientY;
     }
 
-
-    function endPan(e) {
-        activePointers.delete(e.pointerId);
-        if (activePointers.size === 0) {
-            document.removeEventListener("pointermove", handlePan);
-        }
-    }
-
-    bground.addEventListener("pointerdown", beginPan);
-    document.addEventListener("pointerup", endPan);
-    document.addEventListener("pointercancel", endPan);
+    document.addEventListener('pointermove', handlePan);
 
     // scroll --^
     //
     //  zoom ---v
 
-    let rawZoom = 1, currentZoom = 1;
-    const snapValues = [1 / 16, 1 / 12, 1 / 8, 1 / 6, 1 / 4, 1 / 3, 1 / 2, 1 / 1.5, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32];
+    let rawZoom = 1, currentZoom = 0;
+    const snapValues = [1 / 32, 1 / 24, 1 / 16, 1 / 12, 1 / 8, 1 / 6, 1 / 4, 1 / 3, 1 / 2, 1 / 1.5, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32];
     const tolerance = 0.0625;
 
-    function handleZoom(e) {
-        // e.preventDefault();
-        const oldZoom = currentZoom;
-        rawZoom = rawZoom * Math.pow(2, (-e.deltaY) * 0.002);
-        currentZoom = rawZoom;
+    function getDistance(touch1, touch2) {
+        const dx = touch2.pageX - touch1.pageX;
+        const dy = touch2.pageY - touch1.pageY;
+        return Math.hypot(dx + dy);
+    }
 
-        // Snap to one of your predefined snap values if close enough:
-        for (const snap of snapValues) {
-            const zoomSnapDiff = Math.abs(1 - rawZoom / snap);
-            if (zoomSnapDiff > tolerance) continue;
-            currentZoom = snap;
-            break;
+
+    function handleTwoFinger(e) {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+
         }
+        let tmpR = e.deltaY / 10000;
+        currentZoom += tmpR;
 
-        // Adjust the translation offsets so that the zoom is centered on the pointer.
-        transX = bground.dataset.x - (bground.dataset.x - transX) * (currentZoom / oldZoom);
-        transY = bground.dataset.y - (bground.dataset.y - transY) * (currentZoom / oldZoom);
+        // Save the original values to avoid interfering between calculations:
+        const oldX = transX;
+        const oldY = transY;
+
+        // Rotate the point (transX, transY) around the pivot (e.clientX, e.clientY)
+        transX = Math.cos(tmpR) * (oldX - e.clientX) - Math.sin(tmpR) * (oldY - e.clientY) + e.clientX;
+        transY = Math.sin(tmpR) * (oldX - e.clientX) + Math.cos(tmpR) * (oldY - e.clientY) + e.clientY;
+
 
         // Apply both translate and scale in a single transform.
         // bgorig.style.transitionDuration = '100ms';
-        bgorig.style.transform = `translate(${transX}px, ${transY}px) scale(${currentZoom})`;
+        bgorig.style.transform = `
+        translate(${transX}px, ${transY}px)
+        rotate(${currentZoom}rad)
+        `;
     }
+
+    // function handleZoom(e) {
+    //     e.preventDefault();
+    //     const oldZoom = currentZoom;
+    //     rawZoom = rawZoom * Math.pow(2, (-e.deltaY) * 0.002);
+    //     currentZoom = rawZoom;
+
+    //     // Snap to one of your predefined snap values if close enough:
+    //     for (const snap of snapValues) {
+    //         const zoomSnapDiff = Math.abs(1 - rawZoom / snap);
+    //         if (zoomSnapDiff > tolerance) continue;
+    //         currentZoom = snap;
+    //         break;
+    //     }
+
+    //     // Adjust the translation offsets so that the zoom is centered on the pointer.
+    //     transX = pointerX - (pointerX - transX) * (currentZoom / oldZoom);
+    //     transY = pointerY - (pointerY - transY) * (currentZoom / oldZoom);
+
+    //     // Apply both translate and scale in a single transform.
+    //     // bgorig.style.transitionDuration = '100ms';
+    //     bgorig.style.transform = `
+    //     translate(${transX}px, ${transY}px)
+    //     scale(${currentZoom})
+    //     `;
+    // }
 
     bground.addEventListener("wheel", handleZoom);
 };

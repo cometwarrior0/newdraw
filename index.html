@@ -5,16 +5,45 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script defer src="./scripts/script.js"></script>
+    <script type="module" defer src="./scripts/script.js">
+        window.onload = function () {
+            window.scrollTo(0, 0); // Moves scroll position to the top-left corner (0,0)
+        };
+    </script>
     <style>
         * {
             touch-action: none;
             user-select: none;
         }
+
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            /* IE & Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+            /* Chrome, Safari, Edge */
+        }
     </style>
 </head>
 
-<body class="">
+<body class="overflow-hidden">
+    <div id="bground" class="overflow-visible scrollbar-hide h-screen">
+        <div id="bgorigin" class="absolute">
+            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[32768px] h-[32768px]">
+                <div id="checker-bg"
+                    class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style="
+                        background: 
+                            repeating-conic-gradient(#fff 0 25%, #777 0 50%) 
+                            50% / 32px 32px
+                        ">
+                </div>
+            </div>
+        </div>
+    </div>
     <div id="create-panel"
         class="absolute left-1/2 top-1/2 flex h-32 w-48 -translate-x-1/2 -translate-y-1/2 flex-col flex-wrap items-center justify-center gap-2 rounded-2xl bg-[#333]">
         <div class="flex items-center flex-row gap-1">
@@ -31,14 +60,8 @@
             Create
         </button>
     </div>
-    <div id="bground" class="overflow-hidden h-screen">
-        <div id="bgorigin" class="absolute">
-            <div id="checker-bg" class="absolute -translate-x-1/2 -translate-y-1/2" style="
-                background: 
-                    repeating-conic-gradient(#fff 0 25%, #777 0 50%) 
-                    50% / 32px 32px
-                ">
-            </div>
+    <div id="fground" class="">
+        <div class="">
         </div>
     </div>
 </body>

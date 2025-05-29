@@ -1,298 +1,242 @@
-// let ctx;
-// const TWOPI = Math.PI * 2;
-// self.addEventListener('message', (e) => {
-//   const { type } = e.data;
+let canvas, ctx;
+const TWO_PI = Math.PI * 2;
 
-//   if (type === 'init') {
-//     // The initial message contains the OffscreenCanvas
-//     const offscreenCanvas = e.data.canvas;
-//     ctx = offscreenCanvas.getContext('2d');
-//     // Optionally, set initial canvas properties
-//     ctx.fillStyle = 'white';
-//     ctx.fillRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-//   }
+self.addEventListener('message', (e) => {
+  const { type } = e.data;
 
-//   // Handle pointer events or other drawing instructions
-//   else if (type === 'pointerMove') {
-//     const { x, y } = e.data;
-//     // Example: Draw a circle where the pointer was pressed
-//     drawCircle(x, y, 20, 'red');
-//   }
-//   // More cases can be added (pointerMove, pointerUp, etc.)
-// });
-
-// // Helper function to draw a circle
-// function drawCircle(x, y, radius, color) {
-//   if (!ctx) return;
-//   ctx.fillStyle = color;
-//   ctx.beginPath();
-//   ctx.arc(x, y, radius, 0, TWOPI);
-//   ctx.fill();
-// }
-
-
-
-
-// Global variables
-let gl, canvasWidth, canvasHeight;
-let circleProgram, textureProgram;
-let quadVAO;
-let strokeFBO, strokeTexture;
-let committedFBO, committedTexture;
-
-const uniforms = {
-  circle: {},
-  texture: {},
-};
-
-let isPointerDown = false;
-let strokeSettings = {
-  radius: 20,
-  color: [1, 0, 0, 0.5],
-  intraAlphaMode: 'maximum'
-};
-
-// Shaders
-const quadVS = `#version 300 es
-in vec2 a_position;
-out vec2 v_texCoord;
-void main() {
-  gl_Position = vec4(a_position, 0.0, 1.0);
-  v_texCoord = a_position * 0.5 + 0.5;
-}`;
-
-const circleFS = `#version 300 es
-precision highp float;
-uniform vec2 u_resolution;
-uniform vec2 u_circleCenter;
-uniform float u_circleRadius;
-uniform vec4 u_baseColor;
-uniform bool u_outputPremultiplied;
-out vec4 outColor;
-void main() {
-  float dist = distance(gl_FragCoord.xy, u_circleCenter);
-  float softness = 1.0;
-  float aa_alpha = smoothstep(u_circleRadius + softness, u_circleRadius - softness, dist);
-  float effective_alpha = u_baseColor.a * aa_alpha;
-  if (u_outputPremultiplied) {
-    outColor = vec4(u_baseColor.rgb * effective_alpha, effective_alpha);
-  } else {
-    outColor = vec4(u_baseColor.rgb, effective_alpha);
+  if (type === 'init') {
+    canvas = e.data.canvas;
+    ctx = canvas.getContext('2d');
   }
-}`;
 
-const textureFS = `#version 300 es
-precision highp float;
-in vec2 v_texCoord;
-uniform sampler2D u_texture;
-out vec4 outColor;
-void main() {
-  outColor = texture(u_texture, v_texCoord);
-}`;
+  // Handle pointer events or other drawing instructions
+  else if (type === 'pointerMove') {
+    const ev = e.data.event;
+    // Example: Draw a circle where the pointer was pressed
+    smooth(ev);
+  }
+  // More cases can be added (pointerMove, pointerUp, etc.)
+});
 
-// Message handler (e.g. when used in a worker)
-self.onmessage = (e) => {
-  const { type, ...data } = e.data;
-  switch (type) {
-    case 'init':
-      initGL(data.canvas);
-      if (gl) {
-        // Clear the main canvas and committed framebuffer.
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.clearColor(1, 1, 1, 1);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, committedFBO);
-        gl.clearColor(1, 1, 1, 1); // Adjust for transparent if needed (e.g. 0,0,0,0)
-        gl.clear(gl.COLOR_BUFFER_BIT);
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+
+
+
+
+
+
+
+function smooth(e) {
+  for (const ev of e) {
+    ctx.beginPath();
+    ctx.arc(ev.x, ev.y, ev.pressure * 20, 0, TWO_PI);
+    ctx.fill();
+  }
+}
+
+
+
+
+
+function drawCircle(pointEvts, curoff, color = "rgb(0,0,0)") {
+  canvas.fillStyle = color;
+  if (pointEvts.length > 4) {
+    pointEvts.splice(0, pointEvts.length - 4);
+  }
+  else if (pointEvts.length < 4) {
+    while (pointEvts.length < 4)
+      pointEvts.push(pointEvts[pointEvts.length - 1]);
+  }
+  const x0 = pointEvts[0][0];
+  const x1 = pointEvts[1][0];
+  const x2 = pointEvts[2][0];
+  const x3 = pointEvts[3][0];
+  const y0 = pointEvts[0][1];
+  const y1 = pointEvts[1][1];
+  const y2 = pointEvts[2][1];
+  const y3 = pointEvts[3][1];
+  const p0 = pointEvts[0][2];
+  const p1 = pointEvts[1][2];
+  const p2 = pointEvts[2][2];
+  const p3 = pointEvts[3][2];
+  const xl0 = x1 - x0;
+  const xl1 = x2 - x1;
+  const xl2 = x3 - x2;
+  const yl0 = y1 - y0;
+  const yl1 = y2 - y1;
+  const yl2 = y3 - y2;
+  const l0 = Math.sqrt(xl0 * xl0 + yl0 * yl0);
+  const l1 = Math.sqrt(xl1 * xl1 + yl1 * yl1);
+  const l2 = Math.sqrt(xl2 * xl2 + yl2 * yl2);
+  // const avgPrs = (p0 + p1 + p2+ p3);
+  // const testmultipler = clamp(2/(avgPrs*headsize*headdist), 0.25, 4);
+  // console.log(testmultipler)
+  const tl = (((l0 + l1 + l2) * 2 + 1) | 0);
+  const itl = 1 / tl;
+  let lx = crs(0, x0, x1, x2, x3);
+  let ly = crs(0, y0, y1, y2, y3);
+  // ct.strokeStyle = "red";
+  // ct.beginPath();
+  // ct.arc(x3, y3, 50, 0, 2 * Math.PI);
+  // ct.stroke();
+  // ct.fillStyle = "black";
+  for (let prog = itl; prog < 1.00001; prog += itl) {
+    const cx = crs(prog, x0, x1, x2, x3);
+    const cy = crs(prog, y0, y1, y2, y3);
+    let cp = crs(prog, p0, p1, p2, p3);
+    cp *= headsize;
+    const dx = cx - lx;
+    const dy = cy - ly;
+    const dlen = Math.hypot(dx, dy);
+    lx = cx;
+    ly = cy;
+    curoff -= dlen;
+    if (cp <= 0)
+      continue;
+    if ((curoff + cp * headdist) <= 0) {
+      // curCTX.globalCompositeOperation = "destination-over";
+      curCTX.globalAlpha = cp / headsize * 0.125;
+      curCTX.beginPath();
+      curCTX.arc(cx, cy, cp, 0, 6.2831853);
+      curCTX.fill();
+      // alphaComparison(curCTX, cx, cy, cp, color);
+      curoff += Math.max(2 * cp * headdist, dlen); // add dlen if bigger than headsize
+    }
+  }
+  return curoff;
+}
+
+
+
+
+function crs(t, a, b = a, c = b, d = c) {
+  let tt = t * t;
+  return (2 * b
+    + (t * (-a + c)
+      + tt * (2 * a - 5 * b + 4 * c - d))
+    + tt * t * (-a + 3 * (b - c) + d)) * 0.5;
+}
+
+
+class BezierMapper {
+  constructor() {
+    this.controlPoints = [[0, 0], [0.25, 0], [0.75, 1], [1, 1]];
+  }
+  /**
+   * Function to update the control point (must be between 0 and 1 for both x and y)
+   * @param cx - x-coordinate of the control point
+   * @param cy - y-coordinate of the control point
+   */
+  setControlPoint(index, cx, cy) {
+    var _a, _b, _c, _d;
+    if (index < 0 || index >= this.controlPoints.length) {
+      console.warn("Invalid control point index.");
+      return;
+    }
+    let prevX = (_b = (_a = this.controlPoints[index - 1]) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : 0;
+    let nextX = (_d = (_c = this.controlPoints[index + 1]) === null || _c === void 0 ? void 0 : _c[0]) !== null && _d !== void 0 ? _d : 1;
+    cx = clamp(cx, prevX, nextX);
+    cy = clamp(cy);
+    this.controlPoints[index] = [cx, cy];
+    // this.controlPoints.sort((a, b) => a[0] - b[0]);
+  }
+  addControlPoint(cx, cy) {
+    cx = clamp(cx);
+    cy = clamp(cy);
+    this.controlPoints.push([cx, cy]);
+    this.controlPoints.sort((a, b) => a[0] - b[0]);
+  }
+  getControlPointIdx(target, tolerance = 0) {
+    let index = -1;
+    let minDist = tolerance;
+    this.controlPoints.forEach(([x, y], i) => {
+      const dist = Math.hypot(x - target[0], y - target[1]);
+      if (dist <= minDist) {
+        minDist = dist;
+        index = i;
       }
-      break;
-    case 'pointerDown':
-      isPointerDown = true;
-      strokeSettings.radius = data.radius || strokeSettings.radius;
-      strokeSettings.color = data.color || strokeSettings.color;
-      if (data.strokeOptions?.intraStrokeAlphaMode === 'maximum') {
-        strokeSettings.intraAlphaMode = data.strokeOptions.intraStrokeAlphaMode;
+    });
+    return index;
+  }
+  getControlPointDist(index, pos) {
+    if (index < 0 || index >= this.controlPoints.length) {
+      console.warn("Invalid control point index.");
+      return -1;
+    }
+    const [x, y] = this.controlPoints[index];
+    return Math.hypot(x - pos[0], y - pos[1]);
+  }
+  removeControlPoint(index) {
+    if (this.controlPoints.length < 2) {
+      console.warn("Can't delete last control point.");
+      return;
+    }
+    this.controlPoints = this.controlPoints.filter((_, i) => i !== index);
+  }
+  /**
+   * Map an x-value to a y-value using the Bézier curve.
+   * @param x - The input x-value (between 0 and 1)
+   * @returns The corresponding y-value (between 0 and 1)
+   */
+  mapXToY(x) {
+    let frstX = this.controlPoints[0][0];
+    let lastX = this.controlPoints[this.controlPoints.length - 1][0];
+    let frstY = this.controlPoints[0][1];
+    let lastY = this.controlPoints[this.controlPoints.length - 1][1];
+    if (x >= lastX)
+      return lastY;
+    if (x < frstX)
+      return -1;
+    let i = 1;
+    for (; i < this.controlPoints.length - 2; i += 1) {
+      const avgx = (this.controlPoints[i][0] + this.controlPoints[i + 1][0]) * 0.5;
+      const avgy = (this.controlPoints[i][1] + this.controlPoints[i + 1][1]) * 0.5;
+      if (x < avgx) {
+        lastX = avgx;
+        lastY = avgy;
+        break;
       }
-      // Copy current main canvas into the committed framebuffer.
-      gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
-      gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, committedFBO);
-      gl.blitFramebuffer(
-        0, 0, canvasWidth, canvasHeight,
-        0, 0, canvasWidth, canvasHeight,
-        gl.COLOR_BUFFER_BIT,
-        gl.NEAREST
-      );
-      // Clear the stroke framebuffer for a new stroke.
-      gl.bindFramebuffer(gl.FRAMEBUFFER, strokeFBO);
-      gl.clearColor(0, 0, 0, 0);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      drawSegmentAndComposite(data.x, data.y);
-      break;
-    case 'pointerMove':
-      if (isPointerDown) {
-        strokeSettings.radius = data.radius || strokeSettings.radius;
-        strokeSettings.color = data.color || strokeSettings.color;
-        drawSegmentAndComposite(data.x, data.y);
-      }
-      break;
-    case 'pointerUp':
-      if (isPointerDown) {
-        isPointerDown = false;
-        postMessage({ finishedDrawingStroke: true });
-      }
-      break;
+      frstX = avgx;
+      frstY = avgy;
+    }
+    const t = (x - frstX) / (lastX - frstX);
+    const bx = (this.controlPoints[i][0] - frstX) / (lastX - frstX);
+    const by = this.controlPoints[i][1];
+    return this.XToY(t, frstY, bx, by, lastY);
   }
-};
-
-function initGL(canvas) {
-  canvasWidth = canvas.width;
-  canvasHeight = canvas.height;
-  gl = canvas.getContext('webgl2', { preserveDrawingBuffer: true });
-  if (!gl) {
-    console.error("WebGL2 is not available");
-    return;
+  XToY(x, ay, bx, by, cy) {
+    if (x <= 0) {
+      return clamp(ay);
+    }
+    else if (x >= 1) {
+      return clamp(cy);
+    }
+    // Solve for t using the quadratic formula
+    const a = 2 * -bx + 1;
+    const b = 2 * bx;
+    const c = -x;
+    if (a === 0) {
+      const t = x;
+      const it = 1 - t;
+      const y = clamp(it * it * ay + 2 * it * t * by + t * t * cy);
+      return y;
+    }
+    // Calculate the discriminant
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) {
+      console.warn("Warning: no real solutions.");
+    }
+    // // Solve for t for both values (t2 is not necessary I think??)
+    // const t1 = (-b + Math.sqrt(discriminant)) / (2 * a);
+    // const t2 = (-b - Math.sqrt(discriminant)) / (2 * a);
+    // const t = (t1 < 0 || t1 > 1) ? t2 : t1;
+    // if (t < 0 || t > 1) throw new Error("No valid solution for t in [0, 1].");
+    const t = (-b + Math.sqrt(discriminant)) / (2 * a);
+    const it = 1 - t;
+    // Calculate y using the Bézier formula
+    const y = clamp(it * it * ay + 2 * it * t * by + t * t * cy);
+    return y;
   }
-
-  // Create programs
-  circleProgram = createProgram(
-    compileShader(gl.VERTEX_SHADER, quadVS),
-    compileShader(gl.FRAGMENT_SHADER, circleFS)
-  );
-  textureProgram = createProgram(
-    compileShader(gl.VERTEX_SHADER, quadVS),
-    compileShader(gl.FRAGMENT_SHADER, textureFS)
-  );
-  if (!circleProgram || !textureProgram) return;
-
-  // Retrieve uniform locations
-  uniforms.circle.resolution = gl.getUniformLocation(circleProgram, "u_resolution");
-  uniforms.circle.circleCenter = gl.getUniformLocation(circleProgram, "u_circleCenter");
-  uniforms.circle.circleRadius = gl.getUniformLocation(circleProgram, "u_circleRadius");
-  uniforms.circle.baseColor = gl.getUniformLocation(circleProgram, "u_baseColor");
-  uniforms.circle.outputPremultiplied = gl.getUniformLocation(circleProgram, "u_outputPremultiplied");
-  uniforms.texture.texture = gl.getUniformLocation(textureProgram, "u_texture");
-
-  // Create a shared full-screen quad
-  const quadPositions = new Float32Array([
-    -1, -1, 1, -1, -1, 1,
-    -1, 1, 1, -1, 1, 1
-  ]);
-  quadVAO = gl.createVertexArray();
-  gl.bindVertexArray(quadVAO);
-  posBuffer = gl.createBuffer();
-  gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
-  gl.bufferData(gl.ARRAY_BUFFER, quadPositions, gl.STATIC_DRAW);
-  // Both programs use the attribute named "a_position"
-  const posLoc = gl.getAttribLocation(circleProgram, "a_position");
-  gl.enableVertexAttribArray(posLoc);
-  gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-  gl.bindVertexArray(null);
-
-  // Create framebuffers
-  const strokeFBObject = createFramebufferAndTexture(gl, canvasWidth, canvasHeight);
-  strokeFBO = strokeFBObject.fbo;
-  strokeTexture = strokeFBObject.texture;
-
-  const commitFBObject = createFramebufferAndTexture(gl, canvasWidth, canvasHeight);
-  committedFBO = commitFBObject.fbo;
-  committedTexture = commitFBObject.texture;
-
-  gl.enable(gl.BLEND);
 }
-
-function drawSegmentAndComposite(x, y) {
-  if (!gl) return;
-
-  // 1. Draw new circle segment into the stroke framebuffer.
-  gl.bindFramebuffer(gl.FRAMEBUFFER, strokeFBO);
-  gl.viewport(0, 0, canvasWidth, canvasHeight);
-  gl.useProgram(circleProgram);
-  gl.bindVertexArray(quadVAO);
-  gl.uniform2f(uniforms.circle.resolution, canvasWidth, canvasHeight);
-  gl.uniform2f(uniforms.circle.circleCenter, x, canvasHeight - y);
-  gl.uniform1f(uniforms.circle.circleRadius, strokeSettings.radius);
-  gl.uniform4fv(uniforms.circle.baseColor, strokeSettings.color);
-  gl.enable(gl.BLEND);
-  if (strokeSettings.intraAlphaMode === 'maximum') {
-    gl.uniform1i(uniforms.circle.outputPremultiplied, 0);
-    gl.blendEquationSeparate(gl.FUNC_ADD, gl.MAX);
-    gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE);
-  } else {
-    gl.uniform1i(uniforms.circle.outputPremultiplied, 1);
-    gl.blendEquation(gl.FUNC_ADD);
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  }
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-  // 2. Composite: draw the committed strokes and overlay the new stroke.
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-  gl.viewport(0, 0, canvasWidth, canvasHeight);
-  gl.useProgram(textureProgram);
-  gl.bindVertexArray(quadVAO);
-  gl.activeTexture(gl.TEXTURE0);
-
-  // Draw committed strokes (without blending)
-  gl.bindTexture(gl.TEXTURE_2D, committedTexture);
-  gl.uniform1i(uniforms.texture.texture, 0);
-  gl.disable(gl.BLEND);
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-  // Overlay new stroke (with blending)
-  gl.enable(gl.BLEND);
-  gl.blendEquation(gl.FUNC_ADD);
-  gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-  gl.bindTexture(gl.TEXTURE_2D, strokeTexture);
-  gl.uniform1i(uniforms.texture.texture, 0);
-  gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-  gl.bindVertexArray(null);
-  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-}
-
-function compileShader(type, source) {
-  const shader = gl.createShader(type);
-  gl.shaderSource(shader, source);
-  gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-    console.error(`Shader (${type === gl.VERTEX_SHADER ? "VS" : "FS"}) error:`, gl.getShaderInfoLog(shader));
-    gl.deleteShader(shader);
-    return null;
-  }
-  return shader;
-}
-
-function createProgram(vs, fs) {
-  if (!vs || !fs) return null;
-  const program = gl.createProgram();
-  gl.attachShader(program, vs);
-  gl.attachShader(program, fs);
-  gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    console.error("Program error:", gl.getProgramInfoLog(program));
-    gl.deleteProgram(program);
-    return null;
-  }
-  return program;
-}
-
-function createFramebufferAndTexture(glCtx, width, height) {
-  const texture = glCtx.createTexture();
-  glCtx.bindTexture(glCtx.TEXTURE_2D, texture);
-  glCtx.texImage2D(glCtx.TEXTURE_2D, 0, glCtx.RGBA, width, height, 0, glCtx.RGBA, glCtx.UNSIGNED_BYTE, null);
-  glCtx.texParameteri(glCtx.TEXTURE_2D, glCtx.TEXTURE_MIN_FILTER, glCtx.LINEAR);
-  glCtx.texParameteri(glCtx.TEXTURE_2D, glCtx.TEXTURE_MAG_FILTER, glCtx.LINEAR);
-  glCtx.texParameteri(glCtx.TEXTURE_2D, glCtx.TEXTURE_WRAP_S, glCtx.CLAMP_TO_EDGE);
-  glCtx.texParameteri(glCtx.TEXTURE_2D, glCtx.TEXTURE_WRAP_T, glCtx.CLAMP_TO_EDGE);
-
-  const fbo = glCtx.createFramebuffer();
-  glCtx.bindFramebuffer(glCtx.FRAMEBUFFER, fbo);
-  glCtx.framebufferTexture2D(glCtx.FRAMEBUFFER, glCtx.COLOR_ATTACHMENT0, glCtx.TEXTURE_2D, texture, 0);
-  if (glCtx.checkFramebufferStatus(glCtx.FRAMEBUFFER) !== glCtx.FRAMEBUFFER_COMPLETE) {
-    console.error("Framebuffer incomplete");
-  }
-  glCtx.bindTexture(glCtx.TEXTURE_2D, null);
-  glCtx.bindFramebuffer(glCtx.FRAMEBUFFER, null);
-  return { fbo, texture };
-}
+const pressureMap = new BezierMapper;
+const alphaMap = new BezierMapper;

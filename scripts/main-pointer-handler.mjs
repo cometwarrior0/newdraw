@@ -20,11 +20,6 @@ export const handlePointerEvents = (origin, worker, rect) => {
   // Pointer down handler: capture the pointer and register its initial state.
   /** @param {PointerEvent} e */
   function pointerDown(e) {
-    // worker.postMessage({
-    //   type: 'pointerDown',
-    //   x: e.clientX,
-    //   y: e.clientY,
-    // })
     // Capture pointer events so the element receives all related events.
     e.target.setPointerCapture(e.pointerId);
 
@@ -35,46 +30,32 @@ export const handlePointerEvents = (origin, worker, rect) => {
       prevY: e.clientY,
     });
 
-    worker.postMessage({
-      type: 'pointerDown',
-      x: e.offsetX - rect.x,
-      y: e.offsetY - rect.y,
-      radius: e.pressure * 20,
-      color: [1, 0, 0, e.pressure],
-    });
-
     // Process immediate movement.
-    coalEvents.push(e);
     pointerMove(e);
   }
 
-  let coalEvents = [];
-  let meow = 0;
   // Pointer move handler: update pointer tracking then delegate appropriately.
   /** @param {PointerEvent} e */
   function pointerMove(e) {
     if (!state.activePointers.has(e.pointerId))
       return;
 
-    coalEvents.push(...e.getCoalescedEvents());
-    for (let event of coalEvents) {
-      if (meow === 0)
-        worker.postMessage({
-          type: 'pointerMove',
-          x: event.offsetX - rect.x,
-          y: event.offsetY - rect.y,
-          radius: e.pressure * 20,
-          color: [1, 0, 0, e.pressure],
-        });
-      meow = ++meow & 0;
-    }
-    coalEvents.length = 0;
+    const coalescedEvents = e.getCoalescedEvents();
+    // Extract only x, y, and pressure values in order
+    const eventData = coalescedEvents.map(e => ({
+      x: e.offsetX-rect.x,
+      y: e.offsetY-rect.y,
+      pressure: e.pressure
+    }));
 
-    // worker.postMessage({
-    //   type: 'pointerMove',
-    //   x: e.offsetX - rect.x,
-    //   y: e.offsetY - rect.y,
-    // })
+    if (eventData.length === 0) {
+      eventData.push({ x: e.offsetX-rect.x, y: e.offsetY-rect.y, pressure: e.pressure })
+    }
+
+    worker.postMessage({
+      type: 'pointerMove',
+      event: eventData,
+    })
 
     const pointer = state.activePointers.get(e.pointerId);
     state.activePointers.set(e.pointerId, {
@@ -106,12 +87,6 @@ export const handlePointerEvents = (origin, worker, rect) => {
   // Pointer up & cancel handler: release pointer capture and clean-up tracking.
   /** @param {PointerEvent} e */
   function pointerUp(e) {
-    meow = 0;
-    // worker.postMessage({
-    //   type: 'pointerUp',
-    //   x: e.clientX,
-    //   y: e.clientY,
-    // })
     if (e.target.hasPointerCapture(e.pointerId)) {
       e.target.releasePointerCapture(e.pointerId);
     }

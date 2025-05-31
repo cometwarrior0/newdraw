@@ -103,6 +103,7 @@ export function createPressureMap() {
         if (conPtI === -1) {
             pressureMap.addControlPoint(eX, eY);
             conPtI = pressureMap.getControlPointIdx([eX, eY], tolerance);
+            drawPressureMap();
         }
     });
 

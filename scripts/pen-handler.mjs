@@ -1,5 +1,7 @@
+import { createPressureMap } from "./pressure-map.mjs";
+
 const bground = document.getElementById("bground");
-let worker, rect;
+let worker, rect, pressureMap;
 let drawActive = false;
 let activeId = null;
 
@@ -29,7 +31,6 @@ function pointerUp(e) {
 
 /** @param {PointerEvent} e */
 function pointerMove(e) {
-    console.log(e.offsetX - rect.x);
     if (!drawActive || e.pointerId != activeId) return;
     // Use getCoalescedEvents if available; otherwise, fall back to a single-event array.
     const coalescedEvents = typeof e.getCoalescedEvents === 'function' ? e.getCoalescedEvents() : [e];
@@ -53,6 +54,7 @@ function pointerMove(e) {
 export function initPen(workeri, recti) {
     worker = workeri;
     rect = recti;
+    pressureMap = createPressureMap();
 
     bground.addEventListener('pointerdown', pointerDown);
     bground.addEventListener('pointermove', pointerMove);

@@ -1,7 +1,7 @@
 let canvas, ctx;
 let offset = -Infinity;
-let pressureMap;
 const TWO_PI = Math.PI * 2;
+let bground;
 
 self.addEventListener('message', (e) => {
   const { type } = e.data;
@@ -9,9 +9,6 @@ self.addEventListener('message', (e) => {
   if (type === 'init') {
     canvas = e.data.canvas;
     ctx = canvas.getContext('2d');
-    pressureMap = e.data.pressureMap;
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
   else if (type === 'pointerDown') {
@@ -78,21 +75,24 @@ function drawCircles(curoff, headsize = 20, headdist = 0.0625, color = "rgba(255
   }
 
 
-  for (let i = 0; i <= totalLength; i += 0.25, curoff -= 0.25) {
+  const segLenLen = segLenghts.length;
+  const iSegLenLen = 1 / segLenLen;
+  const inc = 0.25;
+  for (let i = 0; i <= totalLength; curoff -= (totalLength > i) ? inc : (totalLength - i), i += inc) {
     let j = 0;
     while (j + 1 < segLenghts.length && segLenghts[j + 1] < i) {
       j++;
     }
 
-    const addProg = j / segLenghts.length;
+    const addProg = j * iSegLenLen;
     const segStart = segLenghts[j];
     const segEnd = segLenghts[j + 1];
-    const prog = (((i - segStart) / (segEnd - segStart)) / segLenghts.length + addProg) ?? 0;
+    const prog = (((i - segStart) / (segEnd - segStart)) * iSegLenLen + addProg) || 0;
 
     let p = Math.max(crs(prog, ps[0], ps[1], ps[2], ps[3]), 0);
     p *= headsize;
 
-    if (curoff + p * headdist <= 0) {
+    if (curoff + p * headdist < -0.5) {
       const x = crs(prog, xs[0], xs[1], xs[2], xs[3]);
       const y = crs(prog, ys[0], ys[1], ys[2], ys[3]);
 
@@ -101,7 +101,7 @@ function drawCircles(curoff, headsize = 20, headdist = 0.0625, color = "rgba(255
       ctx.fill();
 
       i += p * headdist;
-      curoff = (i > totalLength) ? i - totalLength : 0;
+      curoff = 0;
     }
   }
   return curoff;

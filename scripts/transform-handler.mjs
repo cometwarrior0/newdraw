@@ -80,7 +80,7 @@ function handleTransform(e, state) {
 }
 
 export const handleTouch = (panCanvas = false) => {
-    const origin = document.getElementById("bgorigin");
+    const origin = document.getElementById("origin");
     const bground = document.getElementById("bground");
     // Initial state for transformation and active pointers.
     const state = {
@@ -140,7 +140,6 @@ export const handleTouch = (panCanvas = false) => {
             rotate(${state.rotation}rad)
         `;
         }
-
     }
 
     // Pointer up & cancel handler: release pointer capture and clean-up tracking.

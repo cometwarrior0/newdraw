@@ -1,4 +1,3 @@
-
 export class BezierMapper {
     constructor() {
         // Default control points (as [x, y] pairs) for the mapping.
@@ -211,8 +210,7 @@ export class BezierMapper {
         // Return the Bézier-interpolated y-value.
         return clamp(it * it * ay + 2 * it * t * by + t * t * cy);
     }
-
-    clamp(val, min = 0, max = 1) {
-        return Math.min(Math.max(val, min), max);
-    }
+}
+function clamp(val, min = 0, max = 1) {
+    return Math.min(Math.max(val, min), max);
 }

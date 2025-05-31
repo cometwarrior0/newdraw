@@ -17,24 +17,35 @@
         }
 
         canvas {
-            image-rendering: pixelated;
-            /* Ensures sharp pixel scaling */
             image-rendering: crisp-edges;
         }
     </style>
 </head>
 
 <body class="overflow-hidden">
-    <div id="bground" class="h-screen">
-        <div id="bgorigin" style="transform: translate(50vw, 50vh);" class="absolute">
-            <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[32768px] h-[32768px]">
-                <div id="checker-bg"
-                    class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style="
+    <div id="bground" class="h-screen w-screen" style="
                         background: 
                             repeating-conic-gradient(#fff 0 25%, #777 0 50%) 
                             50% / 32px 32px
                         ">
+        <div id="origin" style="transform: translate(50vw, 50vh);" class="absolute">
+            <div id="test" class="absolute -translate-x-1/2 -translate-y-1/2">
+                <div
+                    class="absolute bg-[#111] w-[32768px] h-[32768px] top-0 left-1/2 -translate-x-1/2 -translate-y-full">
                 </div>
+                <div
+                    class="absolute bg-[#111] w-[32768px] h-[32768px] bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
+                </div>
+                <div
+                    class="absolute bg-[#111] w-[32768px] h-[32768px] left-0 top-1/2 -translate-x-full -translate-y-1/2">
+                </div>
+                <div
+                    class="absolute bg-[#111] w-[32768px] h-[32768px] right-0 top-1/2 translate-x-full -translate-y-1/2">
+                </div>
+            </div>
+            <canvas id="canvas" class="absolute overflow-visible -translate-x-1/2 -translate-y-1/2">
+            </canvas>
+            <div id="bgpointer" class="absolute -translate-x-1/2 -translate-y-1/2 w-[32768px] h-[32768px]">
             </div>
         </div>
     </div>

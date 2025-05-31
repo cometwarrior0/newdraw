@@ -16,23 +16,17 @@
             user-select: none;
         }
 
-        .scrollbar-hide {
-            -ms-overflow-style: none;
-            /* IE & Edge */
-            scrollbar-width: none;
-            /* Firefox */
-        }
-
-        .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-            /* Chrome, Safari, Edge */
+        canvas {
+            image-rendering: pixelated;
+            /* Ensures sharp pixel scaling */
+            image-rendering: crisp-edges;
         }
     </style>
 </head>
 
 <body class="overflow-hidden">
-    <div id="bground" class="overflow-visible scrollbar-hide h-screen">
-        <div id="bgorigin" class="absolute">
+    <div id="bground" class="h-screen">
+        <div id="bgorigin" style="transform: translate(50vw, 50vh);" class="absolute">
             <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[32768px] h-[32768px]">
                 <div id="checker-bg"
                     class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style="

@@ -1,4 +1,6 @@
 let canvas, ctx;
+let offset = -Infinity;
+let pressureMap;
 const TWO_PI = Math.PI * 2;
 
 self.addEventListener('message', (e) => {
@@ -7,109 +9,105 @@ self.addEventListener('message', (e) => {
   if (type === 'init') {
     canvas = e.data.canvas;
     ctx = canvas.getContext('2d');
+    pressureMap = e.data.pressureMap;
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // Handle pointer events or other drawing instructions
-  else if (type === 'pointerMove') {
+  else if (type === 'pointerDown') {
     const ev = e.data.event;
-    // Example: Draw a circle where the pointer was pressed
     smooth(ev);
   }
-  // More cases can be added (pointerMove, pointerUp, etc.)
+  else if (type === 'pointerUp') {
+    const ev = e.data.event;
+    smooth(ev);
+    pointerEvents.length = 0;
+    offset = -Infinity;
+  }
+  else if (type === 'pointerMove') {
+    const ev = e.data.event;
+    smooth(ev);
+  }
 });
 
-
-
-
-
-
-
-
-
+const pointerEvents = [];
 function smooth(e) {
   for (const ev of e) {
-    ctx.beginPath();
-    ctx.arc(ev.x, ev.y, ev.pressure * 20, 0, TWO_PI);
-    ctx.fill();
+    pointerEvents.push(ev);
+    offset = drawCircles(offset);
   }
 }
 
-
-
-
-
-function drawCircle(pointEvts, curoff, color = "rgb(0,0,0)") {
-  canvas.fillStyle = color;
-  if (pointEvts.length > 4) {
-    pointEvts.splice(0, pointEvts.length - 4);
+function drawCircles(curoff, headsize = 20, headdist = 0.0625, color = "rgba(255, 0, 0, 0.0625)") {
+  ctx.fillStyle = color;
+  if (pointerEvents.length < 1) return curoff;
+  while (pointerEvents.length < 4) {
+    pointerEvents.push(pointerEvents[pointerEvents.length - 1]);
   }
-  else if (pointEvts.length < 4) {
-    while (pointEvts.length < 4)
-      pointEvts.push(pointEvts[pointEvts.length - 1]);
+  if (pointerEvents.length > 4) {
+    pointerEvents.splice(0, pointerEvents.length - 4);
   }
-  const x0 = pointEvts[0][0];
-  const x1 = pointEvts[1][0];
-  const x2 = pointEvts[2][0];
-  const x3 = pointEvts[3][0];
-  const y0 = pointEvts[0][1];
-  const y1 = pointEvts[1][1];
-  const y2 = pointEvts[2][1];
-  const y3 = pointEvts[3][1];
-  const p0 = pointEvts[0][2];
-  const p1 = pointEvts[1][2];
-  const p2 = pointEvts[2][2];
-  const p3 = pointEvts[3][2];
-  const xl0 = x1 - x0;
-  const xl1 = x2 - x1;
-  const xl2 = x3 - x2;
-  const yl0 = y1 - y0;
-  const yl1 = y2 - y1;
-  const yl2 = y3 - y2;
-  const l0 = Math.sqrt(xl0 * xl0 + yl0 * yl0);
-  const l1 = Math.sqrt(xl1 * xl1 + yl1 * yl1);
-  const l2 = Math.sqrt(xl2 * xl2 + yl2 * yl2);
-  // const avgPrs = (p0 + p1 + p2+ p3);
-  // const testmultipler = clamp(2/(avgPrs*headsize*headdist), 0.25, 4);
-  // console.log(testmultipler)
-  const tl = (((l0 + l1 + l2) * 2 + 1) | 0);
-  const itl = 1 / tl;
-  let lx = crs(0, x0, x1, x2, x3);
-  let ly = crs(0, y0, y1, y2, y3);
-  // ct.strokeStyle = "red";
-  // ct.beginPath();
-  // ct.arc(x3, y3, 50, 0, 2 * Math.PI);
-  // ct.stroke();
-  // ct.fillStyle = "black";
-  for (let prog = itl; prog < 1.00001; prog += itl) {
-    const cx = crs(prog, x0, x1, x2, x3);
-    const cy = crs(prog, y0, y1, y2, y3);
-    let cp = crs(prog, p0, p1, p2, p3);
-    cp *= headsize;
-    const dx = cx - lx;
-    const dy = cy - ly;
-    const dlen = Math.hypot(dx, dy);
-    lx = cx;
-    ly = cy;
-    curoff -= dlen;
-    if (cp <= 0)
-      continue;
-    if ((curoff + cp * headdist) <= 0) {
-      // curCTX.globalCompositeOperation = "destination-over";
-      curCTX.globalAlpha = cp / headsize * 0.125;
-      curCTX.beginPath();
-      curCTX.arc(cx, cy, cp, 0, 6.2831853);
-      curCTX.fill();
-      // alphaComparison(curCTX, cx, cy, cp, color);
-      curoff += Math.max(2 * cp * headdist, dlen); // add dlen if bigger than headsize
+
+  const xs = pointerEvents.map(e => e.x);
+  const ys = pointerEvents.map(e => e.y);
+  const ps = pointerEvents.map(e => e.pressure);
+
+  const d01 = Math.hypot(xs[1] - xs[0], ys[1] - ys[0]);
+  const d12 = Math.hypot(xs[2] - xs[1], ys[2] - ys[1]);
+  const d23 = Math.hypot(xs[3] - xs[2], ys[3] - ys[2]);
+  let approxLen = (d01 + d12 + d23);
+
+  const tl = Math.ceil(approxLen); // find the required resolution
+  const itl = 1 / tl; // get the inverse of the resolution for speedup
+
+  const segLenghts = [0];
+  let totalLength = 0;
+  let prevX = xs[1];
+  let prevY = ys[1];
+  for (let prog = itl; prog <= 1; prog += itl) {
+    const curX = crs(prog, xs[0], xs[1], xs[2], xs[3]);
+    const curY = crs(prog, ys[0], ys[1], ys[2], ys[3]);
+
+    let len = Math.hypot(curX - prevX, curY - prevY);
+
+    totalLength += len;
+    segLenghts.push(totalLength);
+
+    prevX = curX;
+    prevY = curY;
+  }
+
+
+  for (let i = 0; i <= totalLength; i += 0.25, curoff -= 0.25) {
+    let j = 0;
+    while (j + 1 < segLenghts.length && segLenghts[j + 1] < i) {
+      j++;
+    }
+
+    const addProg = j / segLenghts.length;
+    const segStart = segLenghts[j];
+    const segEnd = segLenghts[j + 1];
+    const prog = (((i - segStart) / (segEnd - segStart)) / segLenghts.length + addProg) ?? 0;
+
+    let p = Math.max(crs(prog, ps[0], ps[1], ps[2], ps[3]), 0);
+    p *= headsize;
+
+    if (curoff + p * headdist <= 0) {
+      const x = crs(prog, xs[0], xs[1], xs[2], xs[3]);
+      const y = crs(prog, ys[0], ys[1], ys[2], ys[3]);
+
+      ctx.beginPath();
+      ctx.arc(x, y, p, 0, TWO_PI);
+      ctx.fill();
+
+      i += p * headdist;
+      curoff = (i > totalLength) ? i - totalLength : 0;
     }
   }
   return curoff;
 }
 
-
-
-
-function crs(t, a, b = a, c = b, d = c) {
+function crs(t, a, b, c, d) {
   let tt = t * t;
   return (2 * b
     + (t * (-a + c)
@@ -117,126 +115,6 @@ function crs(t, a, b = a, c = b, d = c) {
     + tt * t * (-a + 3 * (b - c) + d)) * 0.5;
 }
 
-
-class BezierMapper {
-  constructor() {
-    this.controlPoints = [[0, 0], [0.25, 0], [0.75, 1], [1, 1]];
-  }
-  /**
-   * Function to update the control point (must be between 0 and 1 for both x and y)
-   * @param cx - x-coordinate of the control point
-   * @param cy - y-coordinate of the control point
-   */
-  setControlPoint(index, cx, cy) {
-    var _a, _b, _c, _d;
-    if (index < 0 || index >= this.controlPoints.length) {
-      console.warn("Invalid control point index.");
-      return;
-    }
-    let prevX = (_b = (_a = this.controlPoints[index - 1]) === null || _a === void 0 ? void 0 : _a[0]) !== null && _b !== void 0 ? _b : 0;
-    let nextX = (_d = (_c = this.controlPoints[index + 1]) === null || _c === void 0 ? void 0 : _c[0]) !== null && _d !== void 0 ? _d : 1;
-    cx = clamp(cx, prevX, nextX);
-    cy = clamp(cy);
-    this.controlPoints[index] = [cx, cy];
-    // this.controlPoints.sort((a, b) => a[0] - b[0]);
-  }
-  addControlPoint(cx, cy) {
-    cx = clamp(cx);
-    cy = clamp(cy);
-    this.controlPoints.push([cx, cy]);
-    this.controlPoints.sort((a, b) => a[0] - b[0]);
-  }
-  getControlPointIdx(target, tolerance = 0) {
-    let index = -1;
-    let minDist = tolerance;
-    this.controlPoints.forEach(([x, y], i) => {
-      const dist = Math.hypot(x - target[0], y - target[1]);
-      if (dist <= minDist) {
-        minDist = dist;
-        index = i;
-      }
-    });
-    return index;
-  }
-  getControlPointDist(index, pos) {
-    if (index < 0 || index >= this.controlPoints.length) {
-      console.warn("Invalid control point index.");
-      return -1;
-    }
-    const [x, y] = this.controlPoints[index];
-    return Math.hypot(x - pos[0], y - pos[1]);
-  }
-  removeControlPoint(index) {
-    if (this.controlPoints.length < 2) {
-      console.warn("Can't delete last control point.");
-      return;
-    }
-    this.controlPoints = this.controlPoints.filter((_, i) => i !== index);
-  }
-  /**
-   * Map an x-value to a y-value using the Bézier curve.
-   * @param x - The input x-value (between 0 and 1)
-   * @returns The corresponding y-value (between 0 and 1)
-   */
-  mapXToY(x) {
-    let frstX = this.controlPoints[0][0];
-    let lastX = this.controlPoints[this.controlPoints.length - 1][0];
-    let frstY = this.controlPoints[0][1];
-    let lastY = this.controlPoints[this.controlPoints.length - 1][1];
-    if (x >= lastX)
-      return lastY;
-    if (x < frstX)
-      return -1;
-    let i = 1;
-    for (; i < this.controlPoints.length - 2; i += 1) {
-      const avgx = (this.controlPoints[i][0] + this.controlPoints[i + 1][0]) * 0.5;
-      const avgy = (this.controlPoints[i][1] + this.controlPoints[i + 1][1]) * 0.5;
-      if (x < avgx) {
-        lastX = avgx;
-        lastY = avgy;
-        break;
-      }
-      frstX = avgx;
-      frstY = avgy;
-    }
-    const t = (x - frstX) / (lastX - frstX);
-    const bx = (this.controlPoints[i][0] - frstX) / (lastX - frstX);
-    const by = this.controlPoints[i][1];
-    return this.XToY(t, frstY, bx, by, lastY);
-  }
-  XToY(x, ay, bx, by, cy) {
-    if (x <= 0) {
-      return clamp(ay);
-    }
-    else if (x >= 1) {
-      return clamp(cy);
-    }
-    // Solve for t using the quadratic formula
-    const a = 2 * -bx + 1;
-    const b = 2 * bx;
-    const c = -x;
-    if (a === 0) {
-      const t = x;
-      const it = 1 - t;
-      const y = clamp(it * it * ay + 2 * it * t * by + t * t * cy);
-      return y;
-    }
-    // Calculate the discriminant
-    const discriminant = b * b - 4 * a * c;
-    if (discriminant < 0) {
-      console.warn("Warning: no real solutions.");
-    }
-    // // Solve for t for both values (t2 is not necessary I think??)
-    // const t1 = (-b + Math.sqrt(discriminant)) / (2 * a);
-    // const t2 = (-b - Math.sqrt(discriminant)) / (2 * a);
-    // const t = (t1 < 0 || t1 > 1) ? t2 : t1;
-    // if (t < 0 || t > 1) throw new Error("No valid solution for t in [0, 1].");
-    const t = (-b + Math.sqrt(discriminant)) / (2 * a);
-    const it = 1 - t;
-    // Calculate y using the Bézier formula
-    const y = clamp(it * it * ay + 2 * it * t * by + t * t * cy);
-    return y;
-  }
+function clamp(val, min = 0, max = 1) {
+  return Math.min(Math.max(val, min), max);
 }
-const pressureMap = new BezierMapper;
-const alphaMap = new BezierMapper;

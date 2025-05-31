@@ -1,10 +1,6 @@
 import { handlePointerEvents } from './main-pointer-handler.mjs';
 
-console.log("Hello World");
-const dpr = window.devicePixelRatio || 1;
-
-const ctx = document.createElement('canvas');
-// const gl = ctx.getContext('webgl2', { antialias: false, alpha: true }) || ctx.getContext('webgl', { antialias: false, alpha: true });
+const canvas = document.createElement('canvas');
 
 document.getElementById('create-button').addEventListener('click', () => {
     const checkerbg = document.getElementById('checker-bg');
@@ -20,19 +16,17 @@ document.getElementById('create-button').addEventListener('click', () => {
     checkerbg.style.width = x + 'px';
     checkerbg.style.height = y + 'px';
 
-    document.getElementById('bgorigin').style.transform = `translate(${(bground.offsetWidth / 2) | 0}px, ${(bground.offsetHeight / 2) | 0}px)`
+    canvas.width = x;
+    canvas.height = y;
 
-    ctx.width = x;
-    ctx.height = y;
+    checkerbg.appendChild(canvas);
 
-    checkerbg.appendChild(ctx);
+    const offscreenCanvas = canvas.transferControlToOffscreen();
 
-    const offscreenCanvas = ctx.transferControlToOffscreen();
-
-    const worker = new Worker('scripts/canvas-worker.js');
+    const worker = new Worker('scripts/canvas-worker.js', { type: "module" });
     worker.postMessage({ type: 'init', canvas: offscreenCanvas }, [offscreenCanvas]);
 
-    handlePointerEvents(document.getElementById('bgorigin'), worker, { x: 16384 - x / 2, y: 16384 - y / 2 });
+    handlePointerEvents(worker, { x: 16384 - x / 2, y: 16384 - y / 2 });
 
     document.getElementById('create-panel').remove();
 

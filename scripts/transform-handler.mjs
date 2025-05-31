@@ -1,12 +1,13 @@
 let prevLength = null, prevAngle = null;
 let rawRotation = 0, rawZoom = 1;
 
+
 /**
  * Processes touch inputs.
  * @param {PointerEvent} e 
  * @param {Object} state - Contains shared variables like activePointers, zoom, transX, etc.
  */
-export function handleTransform(e, state) {
+function handleTransform(e, state) {
     const pointerCount = state.activePointers.size;
     if (pointerCount === 2) {
         const [{ x: x1, y: y1 }, { x: x2, y: y2 }] = [...state.activePointers.values()];
@@ -77,3 +78,83 @@ export function handleTransform(e, state) {
     state.transX += deltaX;
     state.transY += deltaY;
 }
+
+export const handleTouch = (panCanvas = false) => {
+    const origin = document.getElementById("bgorigin");
+    const bground = document.getElementById("bground");
+    // Initial state for transformation and active pointers.
+    const state = {
+        transX: (origin.getBoundingClientRect().left) | 0,
+        transY: (origin.getBoundingClientRect().top) | 0,
+        rotation: 0,
+        zoom: 1,
+        activePointers: new Map(),
+    };
+
+    // Pointer down handler: capture the pointer and register its initial state.
+    /** @param {PointerEvent} e */
+    function pointerDown(e) {
+        // Capture pointer events so the element receives all related events.
+        e.target.setPointerCapture(e.pointerId);
+
+        state.activePointers.set(e.pointerId, {
+            x: e.clientX,
+            y: e.clientY,
+            prevX: e.clientX,
+            prevY: e.clientY,
+        });
+
+        // Process immediate movement.
+        pointerMove(e);
+    }
+
+    // Pointer move handler: update pointer tracking then delegate appropriately.
+    /** @param {PointerEvent} e */
+    function pointerMove(e) {
+        if (!state.activePointers.has(e.pointerId)) {
+            if (!panCanvas)
+                return;
+            state.activePointers.set(e.pointerId, {
+                x: e.clientX,
+                y: e.clientY,
+                prevX: e.clientX,
+                prevY: e.clientY,
+            });
+        }
+
+        const pointer = state.activePointers.get(e.pointerId);
+        state.activePointers.set(e.pointerId, {
+            x: e.clientX,
+            y: e.clientY,
+            prevX: pointer.x,
+            prevY: pointer.y,
+        });
+
+        // Dispatch to specialized handlers based on pointer type.
+        if (e.pointerType === 'touch' || panCanvas) {
+            handleTransform(e, state);
+            // Apply the combined CSS transform.
+            origin.style.transform = `
+            translate(${state.transX}px, ${state.transY}px)
+            scale(${state.zoom})
+            rotate(${state.rotation}rad)
+        `;
+        }
+
+    }
+
+    // Pointer up & cancel handler: release pointer capture and clean-up tracking.
+    /** @param {PointerEvent} e */
+    function pointerUp(e) {
+        if (e.target.hasPointerCapture(e.pointerId)) {
+            e.target.releasePointerCapture(e.pointerId);
+        }
+        state.activePointers.delete(e.pointerId);
+    }
+
+    // Attach pointer event listeners on the background element.
+    bground.addEventListener('pointerdown', pointerDown);
+    bground.addEventListener('pointermove', pointerMove);
+    bground.addEventListener('pointerup', pointerUp);
+    bground.addEventListener('pointercancel', pointerUp);
+};

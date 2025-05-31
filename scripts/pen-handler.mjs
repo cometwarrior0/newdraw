@@ -19,7 +19,7 @@ function pointerDown(e) {
 
 /** @param {PointerEvent} e */
 function pointerUp(e) {
-    if (e.pointerType === 'pen') {
+    if (e.pointerType === 'pen' || e.pointerType === 'mouse') {
         drawActive = false;
         activeId = null;
         worker.postMessage({

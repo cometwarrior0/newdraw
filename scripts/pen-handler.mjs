@@ -7,7 +7,7 @@ let activeId = null;
 
 /** @param {PointerEvent} e */
 function pointerDown(e) {
-    if (e.pointerType === 'pen') {
+    if (e.pointerType === 'pen' || e.pointerType === 'mouse') {
         drawActive = true;
         activeId = e.pointerId;
         worker.postMessage({

@@ -52,25 +52,24 @@
 <body class="overflow-hidden">
     <div id="bground" class="w-dvw h-dvh" style="
                         background: 
-                            repeating-conic-gradient(#eee 0 25%, #777 0 50%) 
-                            50% / 32px 32px
+                            repeating-conic-gradient(#eee 0 25%, #888 0 50%) 
+                            50% / 24px 24px
                         ">
-        <div id="origin" style="transform: translate(50vw, 50vh);" class="absolute">
-            <div id="test" class="absolute -translate-x-1/2 -translate-y-1/2">
+        <div id="origin" class="absolute overflow-visible">
+            <div id="placecanvas" class="absolute -translate-x-1/2 -translate-y-1/2">
                 <div
-                    class="absolute bg-[#111] w-[32768px] h-[32768px] top-0 left-1/2 -translate-x-1/2 -translate-y-full">
+                    class="absolute bg-[#111] w-[65536px] h-[65536px] top-0 left-1/2 -translate-x-1/2 -translate-y-full">
                 </div>
                 <div
-                    class="absolute bg-[#111] w-[32768px] h-[32768px] bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
+                    class="absolute bg-[#111] w-[65536px] h-[65536px] bottom-0 left-1/2 -translate-x-1/2 translate-y-full">
                 </div>
                 <div
-                    class="absolute bg-[#111] w-[32768px] h-[32768px] left-0 top-1/2 -translate-x-full -translate-y-1/2">
+                    class="absolute bg-[#111] w-[65536px] h-[65536px] left-0 top-1/2 -translate-x-full -translate-y-1/2">
                 </div>
                 <div
-                    class="absolute bg-[#111] w-[32768px] h-[32768px] right-0 top-1/2 translate-x-full -translate-y-1/2">
+                    class="absolute bg-[#111] w-[65536px] h-[65536px] right-0 top-1/2 translate-x-full -translate-y-1/2">
                 </div>
             </div>
-            <canvas id="canvas" class="absolute overflow-visible -translate-x-1/2 -translate-y-1/2"></canvas>
             <div id="bgpointer" class="absolute -translate-x-1/2 -translate-y-1/2 w-[32768px] h-[32768px]"></div>
         </div>
     </div>
@@ -98,13 +97,14 @@
         </div>
         <div id="sizebutton"
             class="absolute ring-8 ring-[#333] ring-inset w-16 h-16 top-4/7 right-2 rounded-full pointer-events-auto">
-            <div id="sizebg" class="bgclr absolute w-8 h-8 bg-black outline-4 outline-[#333]  centerall rounded-full"></div>
-            <div id="slidercontainer"`
+            <div id="sizebg" class="bgclr absolute w-6 h-6 bg-black outline-4 outline-[#333] centerall rounded-full">
+            </div>
+            <div id="slidercontainer" `
                 class="invisible flex justify-center items-center absolute w-64 h-16 rounded-full right-18 ring-8 ring-[#333] ring-inset">
                 <input type="range" min="1" max="56" value="24"
                     class="[-webkit-appearance:none] bg-[#555] w-56 h-8 rounded-full" id="slider">
             </div>
-
+            <div id=""></div>
         </div>
     </div>
 </body>

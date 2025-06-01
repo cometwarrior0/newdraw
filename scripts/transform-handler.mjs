@@ -45,6 +45,7 @@ function handleTransform(e, state) {
             const deltaZoom = length - prevLength;
             const oldZoom = state.zoom;
             rawZoom *= Math.pow(2, (deltaZoom) * 0.005);
+            rawZoom = Math.min(32, (Math.max(1 / 32, rawZoom)));
             state.zoom = rawZoom;
 
             const snapValues = [
@@ -79,17 +80,30 @@ function handleTransform(e, state) {
     state.transY += deltaY;
 }
 
-export const handleTouch = (panCanvas = false) => {
+export const handleTouch = (rect, panCanvas = false) => {
     const origin = document.getElementById("origin");
     const bground = document.getElementById("bground");
     // Initial state for transformation and active pointers.
     const state = {
-        transX: (origin.getBoundingClientRect().left) | 0,
-        transY: (origin.getBoundingClientRect().top) | 0,
+        transX: document.documentElement.clientWidth/2,
+        transY: document.documentElement.clientHeight/2,
         rotation: 0,
         zoom: 1,
         activePointers: new Map(),
     };
+
+    function fitToScreen(w = rect.x, h = rect.y, sw = document.documentElement.clientWidth, sh = document.documentElement.clientHeight) {
+        const scaleX = (sw / w);
+        const scaleY = (sh / h);
+
+        // Use the smaller scale to ensure the object fits
+        state.zoom = Math.min(scaleX, scaleY);
+        state.transX = sw / 2;
+        state.transY = sh / 2;
+        state.rotation = 0;
+        applyTransform();
+    }
+    fitToScreen();
 
     // Pointer down handler: capture the pointer and register its initial state.
     /** @param {PointerEvent} e */
@@ -133,21 +147,24 @@ export const handleTouch = (panCanvas = false) => {
         // Dispatch to specialized handlers based on pointer type.
         if (e.pointerType === 'touch' || panCanvas) {
             handleTransform(e, state);
-            // Apply the combined CSS transform.
-            origin.style.transform = `
+            applyTransform();
+        }
+    }
+
+    function applyTransform() {
+        state.zoom = Math.min(32, (Math.max(1 / 32, state.zoom)));
+        // Apply the combined CSS transform.
+        origin.style.transform = `
             translate(${state.transX}px, ${state.transY}px)
             scale(${state.zoom})
             rotate(${state.rotation}rad)
         `;
-        }
     }
 
     // Pointer up & cancel handler: release pointer capture and clean-up tracking.
     /** @param {PointerEvent} e */
     function pointerUp(e) {
-        if (e.target.hasPointerCapture(e.pointerId)) {
-            e.target.releasePointerCapture(e.pointerId);
-        }
+        e.target.releasePointerCapture(e.pointerId);
         state.activePointers.delete(e.pointerId);
     }
 

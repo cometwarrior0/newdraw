@@ -18,7 +18,7 @@ function pointerDown(e) {
         activeId = e.pointerId;
         worker.postMessage({
             type: 'pointerDown',
-            event: [{ x: e.offsetX - rect.x, y: e.offsetY - rect.y, pressure: p}],
+            event: [{ x: e.offsetX - rect.x, y: e.offsetY - rect.y, pressure: p }],
             color: color,
             radius: radius,
         });
@@ -68,7 +68,7 @@ function pointerMove(e) {
 
 export function initPen(workeri, recti) {
     worker = workeri;
-    rect = recti;
+    rect = { x: 16384 - recti.x / 2, y: 16384 - recti.y / 2 }; // magic values, 16384 = half of 32768 to get the center, and subtract half of width and height of canvas to fit x y values to canvas
     pressureMap = createPressureMap();
 
     bground.addEventListener('pointerdown', pointerDown);

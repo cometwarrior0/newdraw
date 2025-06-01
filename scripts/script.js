@@ -1,6 +1,5 @@
 import { handlePointerEvents } from './main-pointer-handler.mjs';
 
-const canvas = document.getElementById('canvas');
 
 document.getElementById('create-button').addEventListener('click', () => {
     const x = clamp(document.getElementById('width-input').value);
@@ -9,6 +8,23 @@ document.getElementById('create-button').addEventListener('click', () => {
         alert("Invalid dimensions, please enter valid numbers");
         return;
     }
+
+    placeCanvas(x, y);
+
+    document.getElementById('fground').style.visibility = 'visible';
+    document.getElementById('create-panel').remove();
+    window.getSelection().removeAllRanges(); // Clear any existing selection
+});
+
+
+function placeCanvas(x, y) {
+    const canvasContainer = document.getElementById('placecanvas');
+    canvasContainer.style.width = x + 'px';
+    canvasContainer.style.height = y + 'px';
+
+    const canvas = document.createElement('canvas');
+    canvasContainer.appendChild(canvas);
+
     canvas.width = x;
     canvas.height = y;
 
@@ -17,20 +33,7 @@ document.getElementById('create-button').addEventListener('click', () => {
     const worker = new Worker('scripts/canvas-worker.js', { type: "module" });
     worker.postMessage({ type: 'init', canvas: offscreenCanvas }, [offscreenCanvas]);
 
-    handlePointerEvents(worker, { x: 16384 - x / 2, y: 16384 - y / 2 });
-
-    resizeTest(x, y);
-
-    document.getElementById('fground').style.visibility = 'visible';
-    document.getElementById('create-panel').remove();
-    window.getSelection().removeAllRanges(); // Clear any existing selection
-});
-
-
-function resizeTest(x, y) {
-    const test = document.getElementById('test');
-    test.style.width = x + 'px';
-    test.style.height = y + 'px';
+    handlePointerEvents(worker, { x: x, y: y });
 }
 
 function clamp(x, l = 1, u = 16384) {

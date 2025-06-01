@@ -32,19 +32,20 @@ const pointerEvents = [];
 function smooth(e) {
   for (const ev of e) {
     pointerEvents.push(ev);
+
+    if (pointerEvents.length < 1) return;
+    while (pointerEvents.length < 4) {
+      pointerEvents.push(pointerEvents[pointerEvents.length - 1]);
+    }
+    if (pointerEvents.length > 4) {
+      pointerEvents.splice(0, pointerEvents.length - 4);
+    }
+
     offset = drawCircles(offset, radius);
   }
 }
 
 function drawCircles(curoff, headsize = 16, headdist = 0.1) {
-  if (pointerEvents.length < 1) return curoff;
-  while (pointerEvents.length < 4) {
-    pointerEvents.push(pointerEvents[pointerEvents.length - 1]);
-  }
-  if (pointerEvents.length > 4) {
-    pointerEvents.splice(0, pointerEvents.length - 4);
-  }
-
   const xs = pointerEvents.map(e => e.x);
   const ys = pointerEvents.map(e => e.y);
   const ps = pointerEvents.map(e => e.pressure);

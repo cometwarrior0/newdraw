@@ -7,6 +7,6 @@ import { initPen } from './pen-handler.mjs';
    * @returns {Function} A function to clean up event listeners and intervals.
  */
 export const handlePointerEvents = (worker, rect) => {
-  handleTouch();
+  handleTouch(rect);
   initPen(worker, rect);
 };

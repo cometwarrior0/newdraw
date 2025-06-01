@@ -4,12 +4,11 @@ const slider = document.getElementById('slider');
 const sizeButton = document.getElementById('sizebutton');
 const sizeBg = document.getElementById('sizebg');
 
-export let radius = 16;
-slider.value = radius * 2;
-
+export let radius = 12;
+slider.value = 24;
 slider.oninput = (event) => {
-    radius = parseInt(event.target.value) / 2;
-    let diameter = radius * 2;
+    let diameter = parseInt(event.target.value);
+    radius = diameter / 2;
     sizeBg.style.width = diameter + 'px';
     sizeBg.style.height = diameter + 'px';
 }

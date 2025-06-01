@@ -1,20 +1,28 @@
 import { BezierMapper } from "./bezier-mapper.mjs";
 
-export function createPressureMap() {
+export const pressureMap = createPressureMap();
+
+function createPressureMap() {
     const pressureMap = new BezierMapper;
+
+    const fground = window.document.getElementById('fground');
 
     const triggerDiv = window.document.createElement('div');
     triggerDiv.style.position = 'absolute'; // Positions the div absolutely
     triggerDiv.style.top = '0';
     triggerDiv.style.zIndex = '1000'; // Ensures it appears above other elements
     triggerDiv.textContent = 'Pressure Map';
+    triggerDiv.style.color = 'white';
     triggerDiv.style.width = '8rem';
     triggerDiv.style.height = '4rem';
-    triggerDiv.style.backgroundColor = '#bbb';
+    triggerDiv.style.backgroundColor = '#222';
     triggerDiv.style.textAlign = 'center';
     triggerDiv.style.lineHeight = '4rem';
     triggerDiv.style.cursor = 'pointer';
-    window.document.body.appendChild(triggerDiv);
+    triggerDiv.style.borderRadius = '0 0 12px 0';
+    triggerDiv.style.outline = '8px solid #333';
+    triggerDiv.style.pointerEvents = 'auto';
+    fground.appendChild(triggerDiv);
 
     const canvasWrapper = window.document.createElement('div');
     canvasWrapper.style.display = 'none';
@@ -24,7 +32,8 @@ export function createPressureMap() {
     canvasWrapper.style.top = '50%';
     canvasWrapper.style.left = '50%';
     canvasWrapper.style.transform = 'translate(-50%, -50%)';
-    window.document.body.appendChild(canvasWrapper);
+    canvasWrapper.style.pointerEvents = 'auto';
+    fground.appendChild(canvasWrapper);
 
     const canO = 32;
     const canvi = window.document.createElement('canvas');
@@ -134,7 +143,7 @@ export function createPressureMap() {
     });
     // Show canvas when clicking on trigger div
     triggerDiv.addEventListener('click', () => {
-        canvasWrapper.style.display = 'block';
+        canvasWrapper.style.display = (canvasWrapper.style.display === 'block') ? 'none' : 'block';
     });
     // Hide canvas when clicking outside the canvas
     window.document.addEventListener('pointerdown', (event) => {

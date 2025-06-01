@@ -1,5 +1,5 @@
 
-const sizeDiv = document.getElementById('slidercontainer');
+const sliderContainer = document.getElementById('slidercontainer');
 const slider = document.getElementById('slider');
 const sizeButton = document.getElementById('sizebutton');
 const sizeBg = document.getElementById('sizebg');
@@ -14,11 +14,11 @@ slider.oninput = (event) => {
 }
 
 sizeButton.onclick = () => {
-    sizeDiv.style.visibility = 'visible';
+    sliderContainer.style.visibility = 'visible';
 }
 
 window.document.addEventListener('pointerdown', (event) => {
-    if (!sizeDiv.contains(event.target) && event.target !== sizeDiv) {
-        sizeDiv.style.visibility = 'hidden';
+    if (!sliderContainer.contains(event.target) && event.target !== sliderContainer) {
+        sliderContainer.style.visibility = 'hidden';
     }
 });

@@ -1,4 +1,6 @@
-let canvas, ctx;
+let canvases = [];
+
+let ctx;
 let offset = -Infinity;
 const TWO_PI = Math.PI * 2;
 let radius = 16;
@@ -6,27 +8,55 @@ let radius = 16;
 self.addEventListener('message', (e) => {
   const { type } = e.data;
 
-  if (type === 'init') {
-    canvas = e.data.canvas;
-    ctx = canvas.getContext('2d');
+  if (type === 'pointerMove') {
+    const ev = e.data.event;
+
+    smooth(ev);
   }
   else if (type === 'pointerDown') {
     const ev = e.data.event;
     ctx.fillStyle = e.data.color;
     radius = e.data.radius;
+    ctx.globalCompositeOperation = (e.data.erase) ? "destination-out" : "source-over";
+
     smooth(ev);
   }
   else if (type === 'pointerUp') {
     const ev = e.data.event;
     smooth(ev);
+
     pointerEvents.length = 0;
     offset = -Infinity;
   }
-  else if (type === 'pointerMove') {
-    const ev = e.data.event;
-    smooth(ev);
+  else if (type === 'newcanvas') {
+    canvases.push({ canvas: e.data.canvas, id: e.data.id });
+    focusCanvas(e.data.id);
+  }
+  else if (type === 'focuscanvas') {
+    focusCanvas(e.data.id);
+  }
+  else if (type === 'removecanvas') {
+    removeCanvas(e.data.id);
   }
 });
+
+function removeCanvas(id) {
+  const idx = canvases.findIndex(canvas => canvas.id === id);
+  if (idx === -1) {
+    console.warn('Warning: index not found with id:', id);
+    return;
+  }
+  canvases.splice(idx, 1);
+}
+
+function focusCanvas(id) {
+  const idx = canvases.findIndex(canvas => canvas.id === id);
+  if (idx === -1) {
+    console.warn('Warning: index not found with id:', id);
+    return;
+  }
+  ctx = canvases[idx].canvas.getContext('2d');
+}
 
 const pointerEvents = [];
 function smooth(e) {
@@ -45,7 +75,7 @@ function smooth(e) {
   }
 }
 
-function drawCircles(curoff, headsize = 16, headdist = 0.1) {
+function drawCircles(curoff, headsize = 16, headdist = 0.125) {
   const xs = pointerEvents.map(e => e.x);
   const ys = pointerEvents.map(e => e.y);
   const ps = pointerEvents.map(e => e.pressure);

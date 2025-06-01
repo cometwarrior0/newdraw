@@ -1,5 +1,6 @@
 import { handleTouch } from './transform-handler.mjs';
 import { initPen } from './pen-handler.mjs';
+import { initTouch } from './touch-draw-handler.mjs';
 
 /**
    * Handles pointer events for scrolling/transforming the origin.
@@ -9,4 +10,5 @@ import { initPen } from './pen-handler.mjs';
 export const handlePointerEvents = (worker, rect) => {
   handleTouch(rect);
   initPen(worker, rect);
+  initTouch(worker, rect);
 };

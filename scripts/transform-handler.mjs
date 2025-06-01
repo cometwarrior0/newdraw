@@ -1,6 +1,22 @@
+const origin = document.getElementById("origin");
+const bground = document.getElementById("bground");
+// Initial state for transformation and active pointers.
+const state = {
+    transX: document.documentElement.clientWidth / 2,
+    transY: document.documentElement.clientHeight / 2,
+    rotation: 0,
+    zoom: 1,
+    activePointers: new Map(),
+};
+
 let prevLength = null, prevAngle = null;
 let rawRotation = 0, rawZoom = 1;
+let rect;
 
+const zoomSnapValues = [
+    1 / 32, 1 / 24, 1 / 16, 1 / 12, 1 / 8, 1 / 6, 1 / 4, 1 / 3,
+    1 / 2, 1 / 1.5, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32
+];
 
 /**
  * Processes touch inputs.
@@ -48,12 +64,8 @@ function handleTransform(e, state) {
             rawZoom = Math.min(32, (Math.max(1 / 32, rawZoom)));
             state.zoom = rawZoom;
 
-            const snapValues = [
-                1 / 32, 1 / 24, 1 / 16, 1 / 12, 1 / 8, 1 / 6, 1 / 4, 1 / 3,
-                1 / 2, 1 / 1.5, 1, 1.5, 2, 3, 4, 6, 8, 12, 16, 24, 32
-            ];
             const tolerance = 0.05;
-            for (const snap of snapValues) {
+            for (const snap of zoomSnapValues) {
                 if (Math.abs(1 - rawZoom / snap) < tolerance) {
                     state.zoom = snap;
                     break;
@@ -72,6 +84,16 @@ function handleTransform(e, state) {
         prevLength = null;
     }
 
+    // !!! REMOVE THIS AT SOME POINT !!!
+    // !!! REMOVE THIS AT SOME POINT !!! BUG FIX TODO
+    // !!! REMOVE THIS AT SOME POINT !!!
+    if (pointerCount === 1) {
+        return;
+    }
+    // !!! REMOVE THIS AT SOME POINT !!!
+    // !!! REMOVE THIS AT SOME POINT !!!
+    // !!! REMOVE THIS AT SOME POINT !!!
+
     // Always pan based on the average pointer movement.
     const pointer = state.activePointers.get(e.pointerId);
     const deltaX = (pointer.x - pointer.prevX) / pointerCount;
@@ -80,29 +102,8 @@ function handleTransform(e, state) {
     state.transY += deltaY;
 }
 
-export const handleTouch = (rect, panCanvas = false) => {
-    const origin = document.getElementById("origin");
-    const bground = document.getElementById("bground");
-    // Initial state for transformation and active pointers.
-    const state = {
-        transX: document.documentElement.clientWidth/2,
-        transY: document.documentElement.clientHeight/2,
-        rotation: 0,
-        zoom: 1,
-        activePointers: new Map(),
-    };
-
-    function fitToScreen(w = rect.x, h = rect.y, sw = document.documentElement.clientWidth, sh = document.documentElement.clientHeight) {
-        const scaleX = (sw / w);
-        const scaleY = (sh / h);
-
-        // Use the smaller scale to ensure the object fits
-        state.zoom = Math.min(scaleX, scaleY);
-        state.transX = sw / 2;
-        state.transY = sh / 2;
-        state.rotation = 0;
-        applyTransform();
-    }
+export const handleTouch = (recti, panCanvas = false) => {
+    rect = recti;
     fitToScreen();
 
     // Pointer down handler: capture the pointer and register its initial state.
@@ -151,16 +152,6 @@ export const handleTouch = (rect, panCanvas = false) => {
         }
     }
 
-    function applyTransform() {
-        state.zoom = Math.min(32, (Math.max(1 / 32, state.zoom)));
-        // Apply the combined CSS transform.
-        origin.style.transform = `
-            translate(${state.transX}px, ${state.transY}px)
-            scale(${state.zoom})
-            rotate(${state.rotation}rad)
-        `;
-    }
-
     // Pointer up & cancel handler: release pointer capture and clean-up tracking.
     /** @param {PointerEvent} e */
     function pointerUp(e) {
@@ -173,4 +164,43 @@ export const handleTouch = (rect, panCanvas = false) => {
     bground.addEventListener('pointermove', pointerMove);
     bground.addEventListener('pointerup', pointerUp);
     bground.addEventListener('pointercancel', pointerUp);
+
+    bground.addEventListener('wheel', handleWheel);
 };
+
+function handleWheel(e) {
+    const oldZoom = state.zoom;
+
+    if (e.deltaY < 0) {
+        state.zoom = zoomSnapValues.find(x => x > state.zoom) || zoomSnapValues[zoomSnapValues.length - 1];
+    } else {
+        state.zoom = zoomSnapValues.findLast(x => x < state.zoom) || zoomSnapValues[0];
+    }
+
+    state.transX = e.clientX - (e.clientX - state.transX) * (state.zoom / oldZoom);
+    state.transY = e.clientY - (e.clientY - state.transY) * (state.zoom / oldZoom);
+
+    applyTransform();
+}
+
+function fitToScreen(w = rect.x, h = rect.y, sw = document.documentElement.clientWidth, sh = document.documentElement.clientHeight) {
+    const scaleX = (sw / w);
+    const scaleY = (sh / h);
+
+    // Use the smaller scale to ensure the object fits
+    state.zoom = Math.min(scaleX, scaleY);
+    state.transX = sw / 2;
+    state.transY = sh / 2;
+    state.rotation = 0;
+    applyTransform();
+}
+
+function applyTransform() {
+    state.zoom = Math.min(32, (Math.max(1 / 32, state.zoom)));
+    // Apply the combined CSS transform.
+    origin.style.transform = `
+        translate(${state.transX}px, ${state.transY}px)
+        scale(${state.zoom})
+        rotate(${state.rotation}rad)
+    `;
+}

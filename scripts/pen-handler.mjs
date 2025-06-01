@@ -1,9 +1,10 @@
-import { createPressureMap } from "./pressure-map.mjs";
+import { pressureMap } from "./pressure-map.mjs";
 import { color } from "./color-picker.mjs";
 import { radius } from "./head-size.mjs";
+import { erase } from "./eraser.mjs";
 
 const bground = document.getElementById("bground");
-let worker, rect, pressureMap;
+let worker, rect;
 let drawActive = false;
 let activeId = null;
 
@@ -21,6 +22,7 @@ function pointerDown(e) {
             event: [{ x: e.offsetX - rect.x, y: e.offsetY - rect.y, pressure: p }],
             color: color,
             radius: radius,
+            erase: erase,
         });
     }
 }
@@ -69,7 +71,6 @@ function pointerMove(e) {
 export function initPen(workeri, recti) {
     worker = workeri;
     rect = { x: 16384 - recti.x / 2, y: 16384 - recti.y / 2 }; // magic values, 16384 = half of 32768 to get the center, and subtract half of width and height of canvas to fit x y values to canvas
-    pressureMap = createPressureMap();
 
     bground.addEventListener('pointerdown', pointerDown);
     bground.addEventListener('pointermove', pointerMove);

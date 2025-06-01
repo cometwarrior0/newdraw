@@ -4,8 +4,8 @@ export class BezierMapper {
         // x and y values are assumed to be in the [0, 1] range.
         this.controlPoints = [
             [0, 0],
-            [0.25, 0],
-            [0.75, 1],
+            [0.2, 0],
+            [0.8, 1],
             [1, 1],
         ];
     }

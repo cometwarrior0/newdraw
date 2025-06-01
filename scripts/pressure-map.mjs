@@ -8,18 +8,18 @@ export function createPressureMap() {
     triggerDiv.style.top = '0';
     triggerDiv.style.zIndex = '1000'; // Ensures it appears above other elements
     triggerDiv.textContent = 'Pressure Map';
-    triggerDiv.style.width = '100px';
-    triggerDiv.style.height = '50px';
-    triggerDiv.style.backgroundColor = 'lightblue';
+    triggerDiv.style.width = '8rem';
+    triggerDiv.style.height = '4rem';
+    triggerDiv.style.backgroundColor = '#bbb';
     triggerDiv.style.textAlign = 'center';
-    triggerDiv.style.lineHeight = '50px';
+    triggerDiv.style.lineHeight = '4rem';
     triggerDiv.style.cursor = 'pointer';
     window.document.body.appendChild(triggerDiv);
 
     const canvasWrapper = window.document.createElement('div');
     canvasWrapper.style.display = 'none';
-    canvasWrapper.style.backgroundColor = '#777';
-    canvasWrapper.style.border = '3px solid #000';
+    canvasWrapper.style.borderRadius = '2rem';
+    canvasWrapper.style.backgroundColor = '#444';
     canvasWrapper.style.position = 'absolute';
     canvasWrapper.style.top = '50%';
     canvasWrapper.style.left = '50%';
@@ -37,23 +37,35 @@ export function createPressureMap() {
     const [canW, canH] = [canvi.width - canO * 2, canvi.height - canO * 2];
 
     function drawPressureMap() {
-        ctxP.clearRect(-canO, -canO, canvi.width, canvi.height);
-        ctxP.fillStyle = "#ffff";
-        ctxP.fillRect(0, 0, canW, canH);
-        ctxP.strokeStyle = "rgb(255,0,0)";
+        const lastIndex = pressureMap.controlPoints.length - 1;
 
+        ctxP.clearRect(-canO, -canO, canvi.width, canvi.height);
+        ctxP.fillStyle = "#bbb";
+        ctxP.fillRect(0, 0, canW, canH);
+
+        ctxP.setLineDash([5, 5]);
+        ctxP.lineWidth = 1;
+        ctxP.strokeStyle = "#f0f";
+        ctxP.beginPath();
+        ctxP.moveTo(pressureMap.controlPoints[0][0] * canW, (1 - pressureMap.controlPoints[0][1]) * canH);
+        for (let i = 0; i < pressureMap.controlPoints.length; ++i) {
+            const [x1, y1] = pressureMap.controlPoints[i];
+            ctxP.lineTo(x1 * canH, (1 - y1) * canH);
+        }
+        ctxP.stroke();
 
         ctxP.setLineDash([0]);
+        ctxP.lineWidth = 1.5;
+        ctxP.strokeStyle = "#f00";
         ctxP.beginPath();
         ctxP.moveTo(pressureMap.controlPoints[0][0] * canW, canH);
         ctxP.lineTo(pressureMap.controlPoints[0][0] * canW, (1 - pressureMap.controlPoints[0][1]) * canH);
         ctxP.stroke();
-        ctxP.strokeStyle = "rgb(0,0,0)";
+
+        ctxP.strokeStyle = "#000";
         ctxP.beginPath();
         ctxP.moveTo(pressureMap.controlPoints[0][0] * canW, (1 - pressureMap.controlPoints[0][1]) * canH);
-
-        ctxP.lineWidth = 1.5;
-        for (let i = 1; i < pressureMap.controlPoints.length - 1; ++i) {
+        for (let i = 1; i < lastIndex; ++i) {
             const [x1, y1] = pressureMap.controlPoints[i];
             let x2 = 0, y2 = 0;
             if (i < pressureMap.controlPoints.length - 2) {
@@ -66,30 +78,21 @@ export function createPressureMap() {
             }
             ctxP.quadraticCurveTo(x1 * canW, (1 - y1) * canH, x2 * canW, (1 - y2) * canH);
         }
-        ctxP.lineTo((pressureMap.controlPoints[pressureMap.controlPoints.length - 1][0]) * canW, (1 - pressureMap.controlPoints[pressureMap.controlPoints.length - 1][1]) * canH);
+        ctxP.lineTo((pressureMap.controlPoints[lastIndex][0]) * canW, (1 - pressureMap.controlPoints[lastIndex][1]) * canH);
         ctxP.stroke();
+
+        ctxP.strokeStyle = "#f00";
         ctxP.beginPath();
-        ctxP.moveTo((pressureMap.controlPoints[pressureMap.controlPoints.length - 1][0]) * canW, (1 - pressureMap.controlPoints[pressureMap.controlPoints.length - 1][1]) * canH);
-        ctxP.strokeStyle = "rgb(255, 0, 0)";
-        ctxP.lineTo(canW, (1 - pressureMap.controlPoints[pressureMap.controlPoints.length - 1][1]) * canH);
+        ctxP.moveTo((pressureMap.controlPoints[lastIndex][0]) * canW, (1 - pressureMap.controlPoints[lastIndex][1]) * canH);
+        ctxP.lineTo(canW, (1 - pressureMap.controlPoints[lastIndex][1]) * canH);
         ctxP.stroke();
         for (let i = 0; i < pressureMap.controlPoints.length; ++i) {
             const [x, y] = pressureMap.controlPoints[i];
-            ctxP.fillStyle = (i === 0 || i === pressureMap.controlPoints.length - 1) ? "red" : "blue";
+            ctxP.fillStyle = (i === 0 || i === lastIndex) ? "red" : "blue";
             ctxP.beginPath();
             ctxP.arc(x * canW, (1 - y) * canH, 5, 0, 6.2831853);
             ctxP.fill();
         }
-
-        ctxP.setLineDash([5, 5]);
-        ctxP.strokeStyle = "#f0f";
-        ctxP.beginPath();
-        ctxP.moveTo(pressureMap.controlPoints[0][0] * canW, (1 - pressureMap.controlPoints[0][1]) * canH);
-        for (let i = 0; i < pressureMap.controlPoints.length; ++i) {
-            const [x1, y1] = pressureMap.controlPoints[i];
-            ctxP.lineTo(x1 * canH, (1 - y1) * canH);
-        }
-        ctxP.stroke();
     }
     drawPressureMap();
 

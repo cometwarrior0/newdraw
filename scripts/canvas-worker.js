@@ -1,7 +1,7 @@
 let canvas, ctx;
 let offset = -Infinity;
 const TWO_PI = Math.PI * 2;
-let bground;
+let radius = 16;
 
 self.addEventListener('message', (e) => {
   const { type } = e.data;
@@ -10,9 +10,10 @@ self.addEventListener('message', (e) => {
     canvas = e.data.canvas;
     ctx = canvas.getContext('2d');
   }
-
   else if (type === 'pointerDown') {
     const ev = e.data.event;
+    ctx.fillStyle = e.data.color;
+    radius = e.data.radius;
     smooth(ev);
   }
   else if (type === 'pointerUp') {
@@ -31,12 +32,11 @@ const pointerEvents = [];
 function smooth(e) {
   for (const ev of e) {
     pointerEvents.push(ev);
-    offset = drawCircles(offset);
+    offset = drawCircles(offset, radius);
   }
 }
 
-function drawCircles(curoff, headsize = 20, headdist = 0.0625, color = "rgba(255, 0, 0, 0.0625)") {
-  ctx.fillStyle = color;
+function drawCircles(curoff, headsize = 16, headdist = 0.1) {
   if (pointerEvents.length < 1) return curoff;
   while (pointerEvents.length < 4) {
     pointerEvents.push(pointerEvents[pointerEvents.length - 1]);

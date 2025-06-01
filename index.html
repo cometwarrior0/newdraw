@@ -5,6 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
     <script type="module" defer src="./scripts/script.js">
         window.onload = function () {
             window.scrollTo(0, 0); // Moves scroll position to the top-left corner (0,0)
@@ -16,6 +17,32 @@
             user-select: none;
         }
 
+        .centerall {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 2rem;
+            height: 2rem;
+            border: 0 solid black;
+            border-radius: 100%;
+            outline: 4px solid #111;
+            background-color: #777;
+        }
+
+        #slider::-moz-range-thumb {
+            width: 2rem;
+            height: 2rem;
+            border: 0 solid black;
+            border-radius: 100%;
+            outline: 4px solid #111;
+            background-color: #777;
+        }
+
         canvas {
             image-rendering: crisp-edges;
         }
@@ -23,7 +50,7 @@
 </head>
 
 <body class="overflow-hidden">
-    <div id="bground" class="h-screen w-screen" style="
+    <div id="bground" class="w-dvw h-dvh" style="
                         background: 
                             repeating-conic-gradient(#fff 0 25%, #777 0 50%) 
                             50% / 32px 32px
@@ -43,14 +70,12 @@
                     class="absolute bg-[#111] w-[32768px] h-[32768px] right-0 top-1/2 translate-x-full -translate-y-1/2">
                 </div>
             </div>
-            <canvas id="canvas" class="absolute overflow-visible -translate-x-1/2 -translate-y-1/2">
-            </canvas>
-            <div id="bgpointer" class="absolute -translate-x-1/2 -translate-y-1/2 w-[32768px] h-[32768px]">
-            </div>
+            <canvas id="canvas" class="absolute overflow-visible -translate-x-1/2 -translate-y-1/2"></canvas>
+            <div id="bgpointer" class="absolute -translate-x-1/2 -translate-y-1/2 w-[32768px] h-[32768px]"></div>
         </div>
     </div>
     <div id="create-panel"
-        class="absolute left-1/2 top-1/2 flex h-32 w-48 -translate-x-1/2 -translate-y-1/2 flex-col flex-wrap items-center justify-center gap-2 rounded-2xl bg-[#333]">
+        class="absolute flex h-32 w-48 centerall flex-col flex-wrap items-center justify-center gap-2 rounded-2xl bg-[#333]">
         <div class="flex items-center flex-row gap-1">
             <input id="width-input" type="text" value="1920" placeholder="width"
                 onchange="this.value = (isNaN(this.value))? '': Math.min(Math.max((this.value|0),1),16384)"
@@ -65,8 +90,21 @@
             Create
         </button>
     </div>
-    <div id="fground" class="">
-        <div class="">
+    <div id="fground" class="invisible absolute top-0 left-0 w-dvw h-dvh pointer-events-none">
+        <div id="colorbutton"
+            class="absolute w-16 h-16 bottom-4/7 right-2 rounded-full bg-[conic-gradient(red_0deg,yellow_60deg,lime_120deg,aqua_150deg,blue_240deg,fuchsia_300deg,red_360deg)] pointer-events-auto">
+            <div id="colorbg" class="bgclr absolute w-12 h-12 centerall bg-black rounded-full"></div>
+            <div id="colorpicker" class="absolute invisible w-64 right-18"></div>
+        </div>
+        <div id="sizebutton"
+            class="absolute ring-8 ring-[#333] ring-inset w-16 h-16 top-4/7 right-2 rounded-full pointer-events-auto">
+            <div id="sizebg" class="bgclr absolute w-8 h-8 bg-black ring-4 ring-[#333]  centerall rounded-full"></div>
+            <div id="slidercontainer"
+                class="invisible flex justify-center items-center absolute w-64 h-16 rounded-full right-18 ring-8 ring-[#333] ring-inset">
+                <input type="range" min="1" max="64" value="32"
+                    class="[-webkit-appearance:none] bg-[#555] w-56 h-8 rounded-full" id="slider">
+            </div>
+
         </div>
     </div>
 </body>

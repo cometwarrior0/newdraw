@@ -1,4 +1,6 @@
 import { createPressureMap } from "./pressure-map.mjs";
+import { color } from "./color-picker.mjs";
+import { radius } from "./head-size.mjs";
 
 const bground = document.getElementById("bground");
 let worker, rect, pressureMap;
@@ -16,8 +18,10 @@ function pointerDown(e) {
         activeId = e.pointerId;
         worker.postMessage({
             type: 'pointerDown',
-            event: [{ x: e.offsetX - rect.x, y: e.offsetY - rect.y, pressure: p }],
-        })
+            event: [{ x: e.offsetX - rect.x, y: e.offsetY - rect.y, pressure: p}],
+            color: color,
+            radius: radius,
+        });
     }
 }
 

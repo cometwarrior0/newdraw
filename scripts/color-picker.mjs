@@ -1,13 +1,13 @@
 const colorDiv = document.getElementById('colorpicker');
 const colorButton = document.getElementById('colorbutton');
 const bgElements = document.querySelectorAll('.bgclr');
-export let color = '#000f';
+export let color = '#000000ff';
 
 const colorPicker = new window.iro.ColorPicker('#colorpicker', {
     // Set the size of the color picker
     width: colorDiv.offsetWidth,
     // Set the initial color to pure black
-    color: "#000f",
+    color: "#000000ff",
     borderWidth: 2,
     borderColor: '#000',
     layout: [

@@ -30,7 +30,6 @@ self.addEventListener('message', (e) => {
   }
   else if (type === 'newcanvas') {
     canvases.push({ canvas: e.data.canvas, id: e.data.id });
-    focusCanvas(e.data.id);
   }
   else if (type === 'focuscanvas') {
     focusCanvas(e.data.id);
@@ -50,6 +49,7 @@ function removeCanvas(id) {
 }
 
 function focusCanvas(id) {
+  console.log('focused!');
   const idx = canvases.findIndex(canvas => canvas.id === id);
   if (idx === -1) {
     console.warn('Warning: index not found with id:', id);

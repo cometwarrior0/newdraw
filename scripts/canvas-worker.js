@@ -90,14 +90,14 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
 
   const segLenghts = [0];
   let totalLength = 0;
-  let prevX = xs[1];
-  let prevY = ys[1];
-  for (let prog = itl; prog <= 1; prog += itl) {
-    const curX = crs(prog, xs[0], xs[1], xs[2], xs[3]);
-    const curY = crs(prog, ys[0], ys[1], ys[2], ys[3]);
+
+  let prevX = cbs(0, xs[0], xs[1], xs[2], xs[3]);
+  let prevY = cbs(0, ys[0], ys[1], ys[2], ys[3]);
+  for (let prog = itl; prog < 1.001; prog += itl) {
+    const curX = cbs(prog, xs[0], xs[1], xs[2], xs[3]);
+    const curY = cbs(prog, ys[0], ys[1], ys[2], ys[3]);
 
     let len = Math.hypot(curX - prevX, curY - prevY);
-
     totalLength += len;
     segLenghts.push(totalLength);
 
@@ -108,8 +108,8 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
 
   const segLenLen = segLenghts.length;
   const iSegLenLen = 1 / segLenLen;
-  const inc = 0.25;
-  for (let i = 0; i <= totalLength; curoff -= (totalLength > i) ? inc : (totalLength - i), i += inc) {
+  const inc = 1;
+  for (let i = 0; i <= totalLength; curoff -= Math.min(inc, (totalLength - i)), i += inc) {
     let j = 0;
     while (j + 1 < segLenghts.length && segLenghts[j + 1] < i) {
       j++;
@@ -120,12 +120,12 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
     const segEnd = segLenghts[j + 1];
     const prog = (((i - segStart) / (segEnd - segStart)) * iSegLenLen + addProg) || 0;
 
-    let p = Math.max(crs(prog, ps[0], ps[1], ps[2], ps[3]), 0);
+    let p = Math.max(cbs(prog, ps[0], ps[1], ps[2], ps[3]), 0);
     p *= headsize;
 
     if (curoff + p * headdist < -0.5) {
-      const x = crs(prog, xs[0], xs[1], xs[2], xs[3]);
-      const y = crs(prog, ys[0], ys[1], ys[2], ys[3]);
+      const x = cbs(prog, xs[0], xs[1], xs[2], xs[3]);
+      const y = cbs(prog, ys[0], ys[1], ys[2], ys[3]);
 
       ctx.beginPath();
       ctx.arc(x, y, p, 0, TWO_PI);
@@ -144,6 +144,16 @@ function crs(t, a, b, c, d) {
     + (t * (-a + c)
       + tt * (2 * a - 5 * b + 4 * c - d))
     + tt * t * (-a + 3 * (b - c) + d)) * 0.5;
+}
+
+function cbs(t, a, b, c, d) {
+  const tt = t * t;
+  return 1 / 6 * (
+    (a + 4 * b + c)
+    + t * (3 * (-a + c))
+    + tt * (3 * (a - 2 * b + c))
+    + tt * t * (-a + 3 * (b - c) + d)
+  );
 }
 
 function clamp(val, min = 0, max = 1) {

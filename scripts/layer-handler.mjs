@@ -43,10 +43,10 @@ function addLayer() {
     const id = createID();
     layers.push({ canvas, offscreenCanvas, id });
 
-    createDiv(id);
-
     // Inform the worker about the new layer.
     worker.postMessage({ type: 'newcanvas', canvas: offscreenCanvas, id: id }, [offscreenCanvas]);
+
+    createDiv(id);
 
     updateZIndex();
 }
@@ -122,6 +122,19 @@ function focusLayer(index) {
     worker.postMessage({ type: 'focuscanvas', id: id });
 }
 
+function focusDiv(id) {
+    const index = findIndexFromID(id);
+    if (index < 0 || index >= layers.length) {
+        console.warn('Invalid layer index:', index);
+        return;
+    }
+    focusLayer(index);
+    removeClassFromChildren(layerContainer, 'bg-[#555]')
+
+    const div = document.getElementById(id);
+    div.classList.add("bg-[#555]");
+}
+
 function createDiv(id) {
     const div = document.createElement('div');
 
@@ -134,18 +147,10 @@ function createDiv(id) {
     div.style.color = '#fff';
     div.textContent = `Layer ${id}`;
     div.id = id;
-    div.onclick = focusDiv;
     layerContainer.insertAdjacentElement('afterbegin', div);
 
-    function focusDiv() {
-        let idx = findIndexFromID(id);
-        if (idx !== -1){
-            focusLayer(idx);
-            removeClassFromChildren(layerContainer,'bg-[#555]')
-            div.classList.add("bg-[#555]")
-        }
-    }
-    focusDiv();
+    div.onclick = focusDiv.bind(null, id);
+    focusDiv(id);
 
     const dltDiv = document.createElement('div');
     const deldivc = "absolute top-2 right-1 border-[#0000] border-x-[#711f] border-[10px]";
@@ -158,6 +163,8 @@ function createDiv(id) {
         if (idx !== -1) {
             if (removeLayer(idx) !== -1) {
                 div.remove();
+                if (idx >= layers.length) idx--;
+                focusDiv(layers[idx].id);
             }
         };
     }

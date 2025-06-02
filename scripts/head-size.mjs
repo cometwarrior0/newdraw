@@ -1,6 +1,4 @@
-
 const sliderContainer = document.getElementById('slidercontainer');
-const slider = document.getElementById('slider');
 const sizeButton = document.getElementById('sizebutton');
 const sizeBg = document.getElementById('sizebg');
 

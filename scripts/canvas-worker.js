@@ -93,7 +93,7 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
 
   let prevX = cbs(0, xs[0], xs[1], xs[2], xs[3]);
   let prevY = cbs(0, ys[0], ys[1], ys[2], ys[3]);
-  for (let prog = itl; prog < 1.001; prog += itl) {
+  for (let prog = itl; prog <= 1; prog += itl) {
     const curX = cbs(prog, xs[0], xs[1], xs[2], xs[3]);
     const curY = cbs(prog, ys[0], ys[1], ys[2], ys[3]);
 
@@ -106,16 +106,16 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
   }
 
 
-  const segLenLen = segLenghts.length;
+  const segLenLen = segLenghts.length - 1;
   const iSegLenLen = 1 / segLenLen;
-  const inc = 1;
+  const inc = 0.5;
   for (let i = 0; i <= totalLength; curoff -= Math.min(inc, (totalLength - i)), i += inc) {
     let j = 0;
     while (j + 1 < segLenghts.length && segLenghts[j + 1] < i) {
       j++;
     }
 
-    const addProg = j * iSegLenLen;
+    const addProg = j * (iSegLenLen);
     const segStart = segLenghts[j];
     const segEnd = segLenghts[j + 1];
     const prog = (((i - segStart) / (segEnd - segStart)) * iSegLenLen + addProg) || 0;

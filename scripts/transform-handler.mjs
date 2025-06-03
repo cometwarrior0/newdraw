@@ -62,10 +62,13 @@ function handleTransform(e, state) {
         // Zoom logic.
         const length = Math.hypot(diffX, diffY);
         if (prevLength !== null) {
+            const minZoom = Math.min(...zoomSnapValues);
+            const maxZoom = Math.max(...zoomSnapValues);
+
             const deltaZoom = length - prevLength;
             const oldZoom = state.zoom;
             rawZoom *= Math.pow(2, (deltaZoom) * 0.005);
-            rawZoom = Math.min(32, (Math.max(1 / 32, rawZoom)));
+            rawZoom = Math.min(maxZoom, (Math.max(minZoom, rawZoom)));
             state.zoom = rawZoom;
 
             const tolerance = 0.05;

@@ -49,7 +49,6 @@ function removeCanvas(id) {
 }
 
 function focusCanvas(id) {
-  console.log('focused!');
   const idx = canvases.findIndex(canvas => canvas.id === id);
   if (idx === -1) {
     console.warn('Warning: index not found with id:', id);
@@ -106,19 +105,19 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
   }
 
 
-  const segLenLen = segLenghts.length - 1;
-  const iSegLenLen = 1 / segLenLen;
+
+  const invSegLen = 1 / (segLenghts.length - 1);
   const inc = 0.5;
   for (let i = 0; i <= totalLength; curoff -= Math.min(inc, (totalLength - i)), i += inc) {
     let j = 0;
-    while (j + 1 < segLenghts.length && segLenghts[j + 1] < i) {
+    while (segLenghts[j + 1] < i) {
       j++;
     }
 
-    const addProg = j * (iSegLenLen);
+    const addProg = j * (invSegLen);
     const segStart = segLenghts[j];
     const segEnd = segLenghts[j + 1];
-    const prog = (((i - segStart) / (segEnd - segStart)) * iSegLenLen + addProg) || 0;
+    const prog = (((i - segStart) / (segEnd - segStart)) * invSegLen + addProg) || 0;
 
     let p = Math.max(cbs(prog, ps[0], ps[1], ps[2], ps[3]), 0);
     p *= headsize;

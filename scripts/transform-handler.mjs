@@ -35,8 +35,10 @@ function handleTransform(e, state) {
         // Rotation logic.
         const angleRad = Math.atan2(diffY, diffX);
         if (prevAngle !== null) {
-            const deltaRotation = angleRad - prevAngle;
-            rawRotation += deltaRotation;
+            const prevRotation = state.rotation;
+
+            const deltaAngle = angleRad - prevAngle;
+            rawRotation += deltaAngle;
             rawRotation %= 2 * Math.PI;
 
             const snapThreshold = 0.08;
@@ -44,6 +46,8 @@ function handleTransform(e, state) {
             state.rotation = (Math.abs(rawRotation - candidate) < snapThreshold)
                 ? candidate
                 : rawRotation;
+
+            const deltaRotation = state.rotation - prevRotation;
 
             // Rotate translation offset around the pivot (centerX, centerY).
             const oldX = state.transX;

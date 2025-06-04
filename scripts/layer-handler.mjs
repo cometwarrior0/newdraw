@@ -6,7 +6,7 @@ const createID = (() => {
 })();
 
 // Global arrays
-const layers = []; // Each layer is an object: { canvas, offscreenCanvas }
+export const layers = []; // Each layer is an object: { canvas, offscreenCanvas }
 const canvasContainer = document.getElementById('canvascontainer');
 let worker = new Worker('scripts/canvas-worker.js', { type: "module" });
 let x, y;
@@ -25,85 +25,6 @@ export function initLayerHandler(ix, iy) {
     // Set up pointer events for the worker
     handlePointerEvents(worker, { x, y });
 }
-
-
-
-
-
-
-
-
-async function compositeLayers() {
-    // Assume all layers share the same dimensions.
-    const { width, height } = layers[0].canvas; // or layers[0].offscreenCanvas
-    console.log(width, height);
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = width;
-    finalCanvas.height = height;
-    const ctx = finalCanvas.getContext('2d');
-
-    // Draw each layer in order. The first layer is drawn first,
-    // and the last one is drawn on top.
-    for (const layer of layers) {
-        // If you want to make sure you work with a bitmap,
-        // convert the offscreen canvas to an ImageBitmap.
-        const imageBitmap = await createImageBitmap(layer.canvas);
-        ctx.drawImage(imageBitmap, 0, 0);
-    }
-
-    return finalCanvas;
-}
-
-const link = document.createElement('div');
-document.body.appendChild(link);
-link.style.position = 'absolute';
-link.style.left = '0';
-link.style.top = '0';
-link.style.width = '1024px';
-link.style.height = '64px';
-link.style.background = 'blue';
-
-// Usage example:
-link.onclick = async () => {
-    try {
-        // Generate the composite canvas
-        const finalCanvas = await compositeLayers();
-
-        // Convert the canvas to a Blob in PNG format
-        finalCanvas.toBlob((blob) => {
-            if (blob) {
-                // Create an object URL for the Blob
-                const url = URL.createObjectURL(blob);
-
-                // Create a temporary <a> element to trigger the download
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'composite.png'; // The desired file name
-
-                // Append the link to the document (optional)
-                document.body.appendChild(a);
-                // Programmatically click the link to start the download
-                a.click();
-
-                // Clean up the URL object and remove the link element if desired
-                URL.revokeObjectURL(url);
-                a.remove();
-            }
-        }, 'image/png');
-    } catch (error) {
-        console.error('Error composing layers:', error);
-    }
-};
-
-
-
-
-
-
-
-
-
-
 
 document.getElementById('addlayer').onclick = addLayer;
 
@@ -237,12 +158,12 @@ function createDiv(id) {
     div.appendChild(dltDiv);
 
     function deleteDiv() {
-        let idx = findIndexFromID(id);
-        if (idx !== -1) {
-            if (removeLayer(idx) !== -1) {
+        let index = findIndexFromID(id);
+        if (index !== -1) {
+            if (removeLayer(index) !== -1) {
                 div.remove();
-                if (idx >= layers.length) idx--;
-                focusDiv(layers[idx].id);
+                if (index >= layers.length) index--;
+                focusDiv(layers[index].id);
             }
         };
     }
@@ -254,8 +175,8 @@ function createDiv(id) {
     div.appendChild(upDiv);
 
     function raiseDiv() {
-        let idx = findIndexFromID(id);
-        if (reorderLayer(idx, idx + 1) === 1) {
+        let index = findIndexFromID(id);
+        if (reorderLayer(index, index + 1) === 1) {
             const previousElem = div.previousElementSibling;
             layerContainer.insertBefore(div, previousElem);
         }
@@ -268,8 +189,8 @@ function createDiv(id) {
     div.appendChild(downDiv);
 
     function lowerDiv() {
-        let idx = findIndexFromID(id);
-        if (reorderLayer(idx, idx - 1) === 1) {
+        let index = findIndexFromID(id);
+        if (reorderLayer(index, index - 1) === 1) {
             let nextElement = div.nextElementSibling;
             nextElement.insertAdjacentElement('afterend', div);
         }

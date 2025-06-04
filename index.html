@@ -46,6 +46,19 @@
         canvas {
             image-rendering: pixelated;
         }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+        }
     </style>
 </head>
 
@@ -120,12 +133,22 @@
         </div>
 
         <div
-            class="absolute top-0 right-0 -translate-y-1-2 ring-8 ring-[#333] bg-[#222] rounded-bl-2xl pointer-events-auto overflow-hidden">
-            <div id="addlayer" class="h-16 w-full border-[#333] flex">
+            class="absolute top-0 right-0 -translate-y-1-2 ring-8 ring-[#333] bg-[#222] rounded-bl-2xl pointer-events-auto overflow-auto max-h-[calc(100vh-10rem)] pt-16">
+            <div id="addlayer" class="fixed top-0 right-0 h-16 w-32 flex z-10 bg-[#222] ring-8 ring-[#333]">
                 <p class="m-auto text-white">Add Layer</p>
             </div>
             <div id="layercontainer">
 
+            </div>
+        </div>
+
+        <div
+            class="absolute bottom-0 right-0 w-32 h-auto -translate-y-1-2 ring-8 ring-[#333] bg-[#222] rounded-tl-2xl pointer-events-auto overflow-auto max-h-[calc(100vh-8rem)]">
+            <div id="saveaspng" class="h-16 flex">
+                <p class="m-auto text-white">Save as PNG</p>
+            </div>
+            <div id="saveproject" class="h-16 flex border-[#333] border-t-8">
+                <p class="m-auto text-white">Save project</p>
             </div>
         </div>
 

@@ -1,4 +1,5 @@
 import { initLayerHandler } from './layer-handler.mjs';
+import './save-handler.mjs';
 
 document.getElementById('create-button').addEventListener('click', () => {
     const x = clamp(document.getElementById('width-input').value);
@@ -8,7 +9,7 @@ document.getElementById('create-button').addEventListener('click', () => {
         return;
     }
 
-    initLayerHandler(x,y);
+    initLayerHandler(x, y);
 
     document.getElementById('fground').style.visibility = 'visible';
     document.getElementById('create-panel').remove();

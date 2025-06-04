@@ -88,3 +88,103 @@
 
 
 export function initTouch(workeri, recti) { }
+
+
+
+// const bground = document.getElementById("bground");
+// // Initial state for transformation and active pointers.
+// const activePointers = new Map();
+
+// // Define a threshold in milliseconds for when you consider a pointer "stale".
+// const STALE_THRESHOLD = 5000; // e.g., 1000ms = 1 second
+
+// // Function to clean up inactive pointers.
+// function removeStalePointers() {
+//     const now = Date.now();
+
+//     activePointers.forEach((pointer, pointerId) => {
+//         if (now - pointer.lastUpdate > STALE_THRESHOLD) {
+//             console.log('removed ', pointerId);
+//             state.activePointers.delete(pointerId);
+//         }
+//     });
+// }
+// setInterval(removeStalePointers, STALE_THRESHOLD);
+
+// let rect, worker;
+
+// /**
+//  * Draw if only one finger is detected
+//  */
+// function handleDraw() {
+//     const pointer = activePointers.values().next().value;
+//     console.log(pointer);
+// }
+
+// export const initTouch = (workeri, recti) => {
+//     worker = workeri;
+//     rect = recti;
+
+//     // Pointer down handler: capture the pointer and register its initial state.
+//     /** @param {PointerEvent} e */
+//     function pointerDown(e) {
+//         if (e.pointerType !== 'touch') {
+//             return;
+//         }
+//         // Capture pointer events so the element receives all related events.
+//         e.target.setPointerCapture(e.pointerId);
+
+//         activePointers.set(e.pointerId, {
+//             startX: e.clientX,
+//             startY: e.clientY,
+//             x: e.clientX,
+//             y: e.clientY,
+//             prevX: e.clientX,
+//             prevY: e.clientY,
+//             lastUpdate: Date.now(),
+//         });
+
+//         // Process immediate movement.
+//         pointerMove(e);
+//     }
+
+//     // Pointer move handler: update pointer tracking then delegate appropriately.
+//     /** @param {PointerEvent} e */
+//     function pointerMove(e) {
+//         if (!activePointers.has(e.pointerId)) {
+//             return;
+//         }
+
+//         const pointer = activePointers.get(e.pointerId);
+//         activePointers.set(e.pointerId, {
+//             startX: pointer.startX,
+//             startY: pointer.startY,
+//             x: e.clientX,
+//             y: e.clientY,
+//             prevX: pointer.x,
+//             prevY: pointer.y,
+//             lastUpdate: Date.now(),
+//         });
+
+//         if (activePointers.size === 1) {
+//             handleDraw();
+//         }
+//     }
+
+//     function pointerUp(e) {
+//         // For a normal pointerup, release the pointer capture explicitly.
+//         if (e.type === 'pointerup') {
+//             e.target.releasePointerCapture(e.pointerId);
+//         }
+//         // In all cases (pointerup, pointercancel, lostpointercapture), clean up the pointer state.
+//         activePointers.delete(e.pointerId);
+//     }
+
+//     // Attach pointer event listeners on the background element.
+//     bground.addEventListener('pointerdown', pointerDown);
+//     bground.addEventListener('pointermove', pointerMove);
+
+//     bground.addEventListener('pointerup', pointerUp);
+//     bground.addEventListener('pointercancel', pointerUp);
+//     bground.addEventListener('lostpointercapture', pointerUp);
+// };

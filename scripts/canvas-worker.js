@@ -4,6 +4,8 @@ let ctx;
 let offset = -Infinity;
 const TWO_PI = Math.PI * 2;
 let radius = 16;
+const color = { r: 0, g: 0, b: 0, a: 255 };
+let erase = false;
 
 self.addEventListener('message', (e) => {
   const { type } = e.data;
@@ -19,6 +21,9 @@ self.addEventListener('message', (e) => {
     radius = e.data.radius;
     ctx.globalCompositeOperation = (e.data.erase) ? "destination-out" : "source-over";
 
+    erase = e.data.erase;
+    hexToRGBA(e.data.color);
+
     smooth(ev);
   }
   else if (type === 'pointerUp') {
@@ -31,6 +36,7 @@ self.addEventListener('message', (e) => {
   }
   else if (type === 'newcanvas') {
     canvases.push({ canvas: e.data.canvas, id: e.data.id });
+    ctx = canvases[0].canvas.getContext('2d');
   }
   else if (type === 'focuscanvas') {
     focusCanvas(e.data.id);
@@ -49,6 +55,7 @@ function removeCanvas(id) {
   canvases.splice(idx, 1);
 }
 
+let imageData;
 function focusCanvas(id) {
   const idx = canvases.findIndex(canvas => canvas.id === id);
   if (idx === -1) {
@@ -56,10 +63,23 @@ function focusCanvas(id) {
     return;
   }
   ctx = canvases[idx].canvas.getContext('2d');
+  imageData = ctx.getImageData(0, 0, canvases[idx].canvas.width, canvases[idx].canvas.height);
 }
+
+function hexToRGBA(hex) {
+  hex = hex.replace(/^#/, '');
+
+  color.r = parseInt(hex.substring(0, 2), 16);
+  color.g = parseInt(hex.substring(2, 4), 16);
+  color.b = parseInt(hex.substring(4, 6), 16);
+  color.a = hex.length === 8 ? parseInt(hex.substring(6, 8), 16) : 255;
+}
+
 
 const pointerEvents = [];
 function smooth(e) {
+  // ctx.clearRect(0, 0, 1920, 1080);
+  // ctx.putImageData(imageData, 0, 0);
   for (const ev of e) {
     pointerEvents.push(ev);
 
@@ -105,8 +125,6 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
     prevY = curY;
   }
 
-
-
   const invSegLen = 1 / (segLenghts.length - 1);
   const inc = 0.25;
   for (; activeLen <= totalLength; activeLen += inc) {
@@ -115,7 +133,7 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
       j++;
     }
 
-    const addProg = j * (invSegLen);
+    const addProg = j * invSegLen;
     const segStart = segLenghts[j];
     const segEnd = segLenghts[j + 1];
     const prog = (((activeLen - segStart) / (segEnd - segStart)) * invSegLen + addProg) || 0;
@@ -137,6 +155,7 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
     curoff -= inc;
   }
   activeLen -= totalLength;
+
   return curoff;
 }
 let activeLen = 0;

@@ -1,5 +1,6 @@
 const origin = document.getElementById("origin");
 const bground = document.getElementById("bground");
+
 // Initial state for transformation and active pointers.
 const state = {
     transX: document.documentElement.clientWidth / 2,
@@ -8,6 +9,22 @@ const state = {
     zoom: 1,
     activePointers: new Map(),
 };
+
+// Define a threshold in milliseconds for when you consider a pointer "stale".
+const STALE_THRESHOLD = 5000; // e.g., 1000ms = 1 second
+
+// Function to clean up inactive pointers.
+function removeStalePointers() {
+    const now = Date.now();
+
+    state.activePointers.forEach((pointer, pointerId) => {
+        if (now - pointer.lastUpdate > STALE_THRESHOLD) {
+            console.log('removed ', pointerId);
+            state.activePointers.delete(pointerId);
+        }
+    });
+}
+setInterval(removeStalePointers, STALE_THRESHOLD);
 
 let prevLength = null, prevAngle = null;
 let rawRotation = 0, rawZoom = 1;
@@ -91,15 +108,9 @@ function handleTransform(e, state) {
         prevLength = null;
     }
 
-    // !!! REMOVE THIS AT SOME POINT !!!
-    // !!! REMOVE THIS AT SOME POINT !!! BUG FIX TODO
-    // !!! REMOVE THIS AT SOME POINT !!!
     if (pointerCount === 1) {
         return;
     }
-    // !!! REMOVE THIS AT SOME POINT !!!
-    // !!! REMOVE THIS AT SOME POINT !!!
-    // !!! REMOVE THIS AT SOME POINT !!!
 
     // Always pan based on the average pointer movement.
     const pointer = state.activePointers.get(e.pointerId);
@@ -124,6 +135,7 @@ export const handleTouch = (recti, panCanvas = false) => {
             y: e.clientY,
             prevX: e.clientX,
             prevY: e.clientY,
+            lastUpdate: Date.now(),
         });
 
         // Process immediate movement.
@@ -134,14 +146,7 @@ export const handleTouch = (recti, panCanvas = false) => {
     /** @param {PointerEvent} e */
     function pointerMove(e) {
         if (!state.activePointers.has(e.pointerId)) {
-            if (!panCanvas)
-                return;
-            state.activePointers.set(e.pointerId, {
-                x: e.clientX,
-                y: e.clientY,
-                prevX: e.clientX,
-                prevY: e.clientY,
-            });
+            return;
         }
 
         const pointer = state.activePointers.get(e.pointerId);
@@ -150,10 +155,14 @@ export const handleTouch = (recti, panCanvas = false) => {
             y: e.clientY,
             prevX: pointer.x,
             prevY: pointer.y,
+            lastUpdate: Date.now(),
         });
 
         // Dispatch to specialized handlers based on pointer type.
-        if (e.pointerType === 'touch' || panCanvas) {
+        if (e.pointerType === 'touch') {
+            if (!panCanvas && state.activePointers.size === 1) {
+
+            }
             handleTransform(e, state);
             applyTransform();
         }

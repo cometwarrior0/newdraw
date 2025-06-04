@@ -27,6 +27,84 @@ export function initLayerHandler(ix, iy) {
 }
 
 
+
+
+
+
+
+
+async function compositeLayers() {
+    // Assume all layers share the same dimensions.
+    const { width, height } = layers[0].canvas; // or layers[0].offscreenCanvas
+    console.log(width, height);
+    const finalCanvas = document.createElement('canvas');
+    finalCanvas.width = width;
+    finalCanvas.height = height;
+    const ctx = finalCanvas.getContext('2d');
+
+    // Draw each layer in order. The first layer is drawn first,
+    // and the last one is drawn on top.
+    for (const layer of layers) {
+        // If you want to make sure you work with a bitmap,
+        // convert the offscreen canvas to an ImageBitmap.
+        const imageBitmap = await createImageBitmap(layer.canvas);
+        ctx.drawImage(imageBitmap, 0, 0);
+    }
+
+    return finalCanvas;
+}
+
+const link = document.createElement('div');
+document.body.appendChild(link);
+link.style.position = 'absolute';
+link.style.left = '0';
+link.style.top = '0';
+link.style.width = '1024px';
+link.style.height = '64px';
+link.style.background = 'blue';
+
+// Usage example:
+link.onclick = async () => {
+    try {
+        // Generate the composite canvas
+        const finalCanvas = await compositeLayers();
+
+        // Convert the canvas to a Blob in PNG format
+        finalCanvas.toBlob((blob) => {
+            if (blob) {
+                // Create an object URL for the Blob
+                const url = URL.createObjectURL(blob);
+
+                // Create a temporary <a> element to trigger the download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'composite.png'; // The desired file name
+
+                // Append the link to the document (optional)
+                document.body.appendChild(a);
+                // Programmatically click the link to start the download
+                a.click();
+
+                // Clean up the URL object and remove the link element if desired
+                URL.revokeObjectURL(url);
+                a.remove();
+            }
+        }, 'image/png');
+    } catch (error) {
+        console.error('Error composing layers:', error);
+    }
+};
+
+
+
+
+
+
+
+
+
+
+
 document.getElementById('addlayer').onclick = addLayer;
 
 function addLayer() {

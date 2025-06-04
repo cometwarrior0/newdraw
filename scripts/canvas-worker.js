@@ -141,23 +141,23 @@ function drawCircles(curoff, headsize = 16, headdist = 0.125) {
 }
 let activeLen = 0;
 
-function crs(t, a, b, c, d) {
-  const tt = t * t;
-  return (2 * b
-    + (t * (-a + c)
-      + tt * (2 * a - 5 * b + 4 * c - d))
-    + tt * t * (-a + 3 * (b - c) + d)) * 0.5;
-}
-
-// function cbs(t, a, b, c, d) {
+// function crs(t, a, b, c, d) {
 //   const tt = t * t;
-//   return 1 / 6 * (
-//     (a + 4 * b + c)
-//     + t * (3 * (-a + c))
-//     + tt * (3 * (a - 2 * b + c))
-//     + tt * t * (-a + 3 * (b - c) + d)
-//   );
+//   return (2 * b
+//     + (t * (-a + c)
+//       + tt * (2 * a - 5 * b + 4 * c - d))
+//     + tt * t * (-a + 3 * (b - c) + d)) * 0.5;
 // }
+
+function cbs(t, a, b, c, d) {
+  const tt = t * t;
+  return 1 / 6 * (
+    (a + 4 * b + c)
+    + t * (3 * (-a + c))
+    + tt * (3 * (a - 2 * b + c))
+    + tt * t * (-a + 3 * (b - c) + d)
+  );
+}
 
 function clamp(val, min = 0, max = 1) {
   return Math.min(Math.max(val, min), max);

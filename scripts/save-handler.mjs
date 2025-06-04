@@ -3,7 +3,6 @@ import { layers } from "./layer-handler.mjs";
 async function compositeLayers() {
     // All layers share the same dimensions.
     const { width, height } = layers[0].canvas;
-    console.log(width, height);
     const finalCanvas = document.createElement('canvas');
     finalCanvas.width = width;
     finalCanvas.height = height;

@@ -13,14 +13,18 @@ function pointerDown(e) {
     if (e.pointerType === 'pen' || e.pointerType === 'mouse') {
         drawActive = true;
         activeId = e.pointerId;
-        const p = pressureMap.mapXToY(e.pressure);
+        const pressure = pressureMap.mapXToY(e.pressure);
 
         worker.postMessage({
             type: 'pointerDown',
-            event: [{ x: e.offsetX - rect.x, y: e.offsetY - rect.y, pressure: p }],
-            color: color,
-            radius: radius,
-            erase: erase,
+            event: [{
+                x: e.offsetX - rect.x,
+                y: e.offsetY - rect.y,
+                pressure
+            }],
+            color,
+            radius,
+            erase,
         });
     }
 }
@@ -28,12 +32,16 @@ function pointerDown(e) {
 /** @param {PointerEvent} e */
 function pointerUp(e) {
     if (e.pointerType === 'pen' || e.pointerType === 'mouse') {
-        const p = pressureMap.mapXToY(e.pressure);
+        const pressure = pressureMap.mapXToY(e.pressure);
         drawActive = false;
         activeId = null;
         worker.postMessage({
             type: 'pointerUp',
-            event: [{ x: e.offsetX - rect.x, y: e.offsetY - rect.y, pressure: p }],
+            event: [{
+                x: e.offsetX - rect.x,
+                y: e.offsetY - rect.y,
+                pressure
+            }],
         })
     }
 }

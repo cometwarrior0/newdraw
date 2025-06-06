@@ -1,5 +1,6 @@
 import { initLayerHandler } from './layer-handler.mjs';
 import './save-handler.mjs';
+import './layer-container-scroll-fix.mjs';
 
 document.getElementById('create-button').addEventListener('click', () => {
     const x = clamp(document.getElementById('width-input').value);

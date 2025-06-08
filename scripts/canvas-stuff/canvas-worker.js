@@ -1,11 +1,13 @@
 let canvases = [];
 
+/** @type {CanvasRenderingContext2D} */
 let ctx;
 let offset = -Infinity;
 const TWO_PI = Math.PI * 2;
 let radius = 16;
 const color = { r: 0, g: 0, b: 0, a: 255 };
 let erase = false;
+let width, height;
 
 self.addEventListener('message', (e) => {
   const { type } = e.data;
@@ -28,6 +30,7 @@ self.addEventListener('message', (e) => {
   }
   else if (type === 'pointerUp') {
     const ev = e.data.event;
+    ev.push(...Array(2).fill(ev[ev.length - 1]));
     smooth(ev);
 
     pointerEvents.length = 0;
@@ -37,12 +40,22 @@ self.addEventListener('message', (e) => {
   else if (type === 'newcanvas') {
     canvases.push({ canvas: e.data.canvas, id: e.data.id });
     ctx = canvases[0].canvas.getContext('2d');
+    width = e.data.canvas.width;
+    height = e.data.canvas.height;
   }
   else if (type === 'focuscanvas') {
     focusCanvas(e.data.id);
   }
   else if (type === 'removecanvas') {
     removeCanvas(e.data.id);
+  }
+  else if (type === 'clear') {
+    ctx.clearRect(0, 0, width, height);
+  }
+  else if (type === 'fill') {
+    ctx.fillStyle = e.data.color;
+    ctx.rect(0, 0, width, height);
+    ctx.fill();
   }
 });
 
@@ -78,8 +91,6 @@ function hexToRGBA(hex) {
 
 const pointerEvents = [];
 function smooth(e) {
-  // ctx.clearRect(0, 0, 1920, 1080);
-  // ctx.putImageData(imageData, 0, 0);
   for (const ev of e) {
     pointerEvents.push(ev);
 

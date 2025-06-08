@@ -65,7 +65,7 @@
 <body class="overflow-hidden">
     <div id="bground" class="w-screen h-screen" style="
                         background: 
-                            repeating-conic-gradient(#eee 0 25%, #888 0 50%) 
+                            repeating-conic-gradient(#eee 0 25%, #999 0 50%) 
                             50% / 24px 24px
                         ">
         <!-- <div id="bground" class="w-lvw h-lvh bg-white"> -->
@@ -132,6 +132,36 @@
             </svg>
         </div>
 
+        <div id="clearbutton"
+            class="absolute w-16 h-16 bottom-2 left-1/2 translate-x-2 border-4 border-[#333] rounded-full pointer-events-auto">
+            <svg id="clearsvg" xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#555"
+                class="absolute centerall" viewBox="0 0 24 24">
+                <path
+                    d="M22 5a1 1 0 0 1-1 1H3a1 1 0 0 1 0-2h5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v1h5a1 1 0 0 1 1 1zM4.934 21.071 4 8h16l-.934 13.071a1 1 0 0 1-1 .929H5.931a1 1 0 0 1-.997-.929zM15 18a1 1 0 0 0 2 0v-6a1 1 0 0 0-2 0zm-4 0a1 1 0 0 0 2 0v-6a1 1 0 0 0-2 0zm-4 0a1 1 0 0 0 2 0v-6a1 1 0 0 0-2 0z" />
+            </svg>
+        </div>
+
+        <div id="fillbutton"
+            class="absolute w-16 h-16 bottom-2 right-1/2 -translate-x-2 border-4 border-[#333] rounded-full pointer-events-auto">
+            <svg id="fillsvg" xmlns="http://www.w3.org/2000/svg" width="48" height="48" class="absolute centerall"
+                viewBox="0 0 48 48">
+                <defs>
+                    <style>
+                        .cls-1 {
+                            fill: none;
+                            stroke: #555;
+                            stroke-linecap: round;
+                            stroke-linejoin: round;
+                            stroke-width: 3px
+                        }
+                    </style>
+                </defs>
+                <path class="cls-1" d="M10 4h28v10H10zM14 11h23" />
+                <path class="cls-1" d="M10 9H9a5 5 0 0 0-5 5h0a5 5 0 0 0 5 5h15v9" />
+                <rect class="cls-1" x="21" y="28" width="6" height="16" rx="1.59" ry="1.59" />
+            </svg>
+        </div>
+
         <div
             class="absolute top-0 right-0 -translate-y-1-2 ring-8 ring-[#333] bg-[#222] rounded-bl-2xl pointer-events-auto overflow-hidden">
             <div id="addlayer" class="h-16 w-32 flex bg-[#222] border-b-8 border-[#333]">
@@ -142,7 +172,7 @@
         </div>
 
         <div
-            class="absolute bottom-0 right-0 w-32 h-auto -translate-y-1-2 ring-8 ring-[#333] bg-[#222] rounded-tl-2xl pointer-events-auto overflow-auto max-h-[calc(100vh-8rem)]">
+            class="absolute bottom-0 right-0 w-32 h-auto -translate-y-1-2 ring-8 ring-[#333] bg-[#222] rounded-tl-2xl pointer-events-auto max-h-[calc(100vh-8rem)]">
             <div id="saveaspng" class="h-16 flex">
                 <p class="m-auto text-white">Save as PNG</p>
             </div>

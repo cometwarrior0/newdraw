@@ -1,4 +1,4 @@
-import { layers } from "./layer-handler.mjs";
+import { layers } from "../layers/layer-handler.mjs";
 
 async function compositeLayers() {
     // All layers share the same dimensions.

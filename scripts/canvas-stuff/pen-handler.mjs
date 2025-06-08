@@ -1,10 +1,11 @@
-import { pressureMap } from "./pressure-map.mjs";
-import { color } from "./color-picker.mjs";
-import { radius } from "./head-size.mjs";
-import { erase } from "./eraser.mjs";
+import { pressureMap } from "../mapper/pressure-map.mjs";
+import { color } from "../tools/color-picker.mjs";
+import { radius } from "../tools/head-size.mjs";
+import { erase } from "../tools/eraser.mjs";
+import { canvasWorker } from "../script.js";
 
 const bground = document.getElementById("bground");
-let worker, rect;
+let rect;
 let drawActive = false;
 let activeId = null;
 
@@ -15,7 +16,7 @@ function pointerDown(e) {
         activeId = e.pointerId;
         const pressure = pressureMap.mapXToY(e.pressure);
 
-        worker.postMessage({
+        canvasWorker.postMessage({
             type: 'pointerDown',
             event: [{
                 x: e.offsetX - rect.x,
@@ -35,7 +36,7 @@ function pointerUp(e) {
         const pressure = pressureMap.mapXToY(e.pressure);
         drawActive = false;
         activeId = null;
-        worker.postMessage({
+        canvasWorker.postMessage({
             type: 'pointerUp',
             event: [{
                 x: e.offsetX - rect.x,
@@ -63,14 +64,13 @@ function pointerMove(e) {
     //     eventData.push({ x: e.offsetX - rect.x, y: e.offsetY - rect.y, pressure: e.pressure })
     // }
 
-    worker.postMessage({
+    canvasWorker.postMessage({
         type: 'pointerMove',
         event: eventData,
     })
 }
 
-export function initPen(workeri, recti) {
-    worker = workeri;
+export function initPen(recti) {
     rect = { x: 16384 - recti.x / 2, y: 16384 - recti.y / 2 }; // magic values, 16384 = half of 32768 to get the center, and subtract half of width and height of canvas to fit x y values to canvas
 
     bground.addEventListener('pointerdown', pointerDown);

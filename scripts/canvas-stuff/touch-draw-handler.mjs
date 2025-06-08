@@ -1,7 +1,8 @@
-import { pressureMap } from "./pressure-map.mjs";
-import { color } from "./color-picker.mjs";
-import { radius } from "./head-size.mjs";
-import { erase } from "./eraser.mjs";
+import { pressureMap } from "../mapper/pressure-map.mjs";
+import { color } from "../tools/color-picker.mjs";
+import { radius } from "../tools/head-size.mjs";
+import { erase } from "../tools/eraser.mjs";
+import { canvasWorker } from "../script.js";
 
 const BACKGROUND_ELEMENT = document.getElementById("bground");
 
@@ -26,7 +27,7 @@ setInterval(removeStalePointers, STALE_THRESHOLD);
 const ACTIVATION_DISTANCE = 15;
 
 let type;
-let rect, worker;
+let rect;
 
 /**
  * Draw if only one finger is detected
@@ -40,7 +41,7 @@ function handleDraw() {
         if (dist < ACTIVATION_DISTANCE) {
             return;
         }
-        worker.postMessage({
+        canvasWorker.postMessage({
             type,
             event: [{
                 x: value.startOffsetX - rect.x,
@@ -54,7 +55,7 @@ function handleDraw() {
         type = 'pointerMove';
     }
 
-    worker.postMessage({
+    canvasWorker.postMessage({
         type,
         event: [{
             x: value.offsetX - rect.x,
@@ -85,8 +86,7 @@ function setActivePointer(
     });
 }
 
-export const initTouch = (workeri, recti) => {
-    worker = workeri;
+export const initTouch = (recti) => {
     rect = { x: 16384 - recti.x / 2, y: 16384 - recti.y / 2 };
 
     // Pointer down handler: capture the pointer and register its initial state.

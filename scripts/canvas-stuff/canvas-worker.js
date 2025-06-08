@@ -57,6 +57,9 @@ self.addEventListener('message', (e) => {
     ctx.rect(0, 0, width, height);
     ctx.fill();
   }
+  else if (type === 'bitmap') {
+    ctx.drawImage(e.data.bitmap, 0, 0);
+  }
 });
 
 function removeCanvas(id) {

@@ -24,11 +24,15 @@ export function initLayerHandler(ix, iy) {
 
     // Set up pointer events for the worker
     handlePointerEvents({ x, y });
+
+    document.getElementById('fground').style.visibility = 'visible';
+    document.getElementById('create-panel').remove();
+    window.getSelection().removeAllRanges(); // Clear any existing selection
 }
 
 document.getElementById('addlayer').onpointerdown = addLayer;
 
-function addLayer() {
+async function addLayer(data) {
     const canvas = document.createElement('canvas');
     canvas.width = x;
     canvas.height = y;
@@ -46,6 +50,13 @@ function addLayer() {
     canvasWorker.postMessage({ type: 'newcanvas', canvas: offscreenCanvas, id: id }, [offscreenCanvas]);
 
     createDiv(id);
+    focusDiv(id);
+
+    // Load canvas data if loading from a file
+    if (data && data.imageBitmap !== undefined) {
+        const clonedBitmap = await createImageBitmap(data.imageBitmap);
+        canvasWorker.postMessage({ type: 'bitmap', bitmap: clonedBitmap });
+    }
 
     updateZIndex();
 }
@@ -149,7 +160,6 @@ function createDiv(id) {
     layerContainer.insertAdjacentElement('afterbegin', div);
 
     div.onpointerdown = focusDiv.bind(null, id);
-    focusDiv(id);
 
     const dltDiv = document.createElement('div');
     const deldivc = "absolute top-2 right-1 border-[#0000] border-x-[#711f] border-[10px]";
@@ -198,3 +208,65 @@ function createDiv(id) {
 
     return;
 }
+
+
+// Assume the JSON file has the structure:
+// {
+//   "width": 800,
+//   "height": 600,
+//   "layerData": [
+//     "data:image/png;base64,...",
+//     "data:image/png;base64,...",
+//     // ...more canvas data URLs
+//   ]
+// }
+
+async function loadProjectFromFile(file) {
+    try {
+        // Step 1: Read and parse the JSON file.
+        const text = await file.text();
+        const projectData = JSON.parse(text);
+        const { width, height, layerData } = projectData;
+        x = width;
+        y = height;
+
+        // Setup container dimensions
+        canvasContainer.style.width = x + 'px';
+        canvasContainer.style.height = y + 'px';
+
+        // Step 2 and 3: For each saved canvas data URL...
+        for (const dataURL of layerData) {
+            // Convert the saved data URL into a Blob using fetch.
+            const response = await fetch(dataURL);
+            const blob = await response.blob();
+
+            // Create an ImageBitmap from the Blob.
+            const imageBitmap = await createImageBitmap(blob);
+
+            addLayer({ imageBitmap });
+        }
+
+        // Set up pointer events for the worker
+        handlePointerEvents({ x, y });
+
+        document.getElementById('fground').style.visibility = 'visible';
+        document.getElementById('create-panel').remove();
+        window.getSelection().removeAllRanges(); // Clear any existing selection
+
+        // Now you have an array of layers (OffscreenCanvas objects) with your saved image data.
+        console.log('Project loaded successfully:', layerData);
+        return;
+    } catch (error) {
+        console.error('Error loading project:', error);
+    }
+}
+
+// Example usage with a file input element:
+const loadProjectInput = document.getElementById('loadproject');
+
+loadProjectInput.addEventListener('change', async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        await loadProjectFromFile(file);
+    }
+});

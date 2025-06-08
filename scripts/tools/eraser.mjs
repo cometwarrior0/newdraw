@@ -3,7 +3,7 @@ const eraserSvg = document.getElementById('erasersvg');
 
 export let erase = false;
 
-eraserButton.onclick = () => {
+eraserButton.onpointerdown = () => {
     erase = !erase;
     eraserButton.style.outline = (erase) ? '4px solid #333' : '0';
     eraserButton.style.border = (erase) ? '4px solid #555' : '4px solid #333';

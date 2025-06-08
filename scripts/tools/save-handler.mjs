@@ -1,8 +1,10 @@
 import { layers } from "../layers/layer-handler.mjs";
 
+const savePNGButton = document.getElementById('saveaspng');
+
 async function compositeLayers() {
-    // All layers share the same dimensions.
     const { width, height } = layers[0].canvas;
+    // All layers share the same dimensions.
     const finalCanvas = document.createElement('canvas');
     finalCanvas.width = width;
     finalCanvas.height = height;
@@ -20,10 +22,7 @@ async function compositeLayers() {
     return finalCanvas;
 }
 
-const savePNGButton = document.getElementById('saveaspng');
-
-// Usage example:
-savePNGButton.onclick = async () => {
+savePNGButton.onpointerdown = async () => {
     try {
         // Generate the composite canvas
         const finalCanvas = await compositeLayers();
@@ -48,7 +47,54 @@ savePNGButton.onclick = async () => {
                 URL.revokeObjectURL(url);
             }
         }, 'image/png');
+        console.log("Image saved successfully!");
     } catch (error) {
         console.error('Error composing layers:', error);
     }
 };
+
+const saveProjectButton = document.getElementById('saveproject');
+
+function saveProject() {
+    const { width, height } = layers[0].canvas;
+    try {
+        // Build up a project object containing an array of layers.
+        // Each layer is stored with its image data (as a data URL) and any additional metadata.
+        const projectData = {
+            width,
+            height,
+            layerData: [],
+        };
+
+        // Iterate over each layer and save its canvas as a data URL.
+        for (const layer of layers) {
+            // Convert the layer's canvas to a data URL (PNG format).
+            const dataURL = layer.canvas.toDataURL('image/png');
+            projectData.layerData.push(dataURL);
+        }
+
+        // Serialize the project data to JSON.
+        const projectJSON = JSON.stringify(projectData);
+
+        // Create a Blob from the JSON, then an object URL for it.
+        const blob = new Blob([projectJSON], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+
+        // Create a temporary link element and trigger a download.
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'project.json'; // The filename for your saved project.
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        // Clean up the object URL.
+        URL.revokeObjectURL(url);
+        console.log("Project saved successfully!");
+    } catch (error) {
+        console.error('Error saving project:', error);
+    }
+}
+
+// Bind the click (or pointerdown) event to your project saving button.
+saveProjectButton.onpointerdown = saveProject;

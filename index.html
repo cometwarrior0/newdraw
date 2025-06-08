@@ -100,8 +100,12 @@
         </div>
         <button id="create-button"
             class="h-8 w-24 rounded-lg bg-[#777] ring-inset ring-[#0003] hover:ring-2 active:bg-[#555] text-black">
-            Create
+            Create New
         </button>
+        <label
+            class="flex items-center justify-center h-8 w-24 rounded-lg bg-[#777] ring-inset ring-[#0003] hover:ring-2 active:bg-[#555] text-black"
+            for="loadproject">Select File</label>
+        <input class="hidden" type="file" id="loadproject" accept="application/json" />
 
     </div>
     <div id="fground" class="invisible absolute top-0 left-0 w-dvw h-dvh pointer-events-none">

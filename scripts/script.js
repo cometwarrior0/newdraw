@@ -23,6 +23,5 @@ function clamp(x, l = 1, u = 16384) {
 }
 
 // import eraser and fill scripts
-
 import './tools/clear.mjs';
 import './tools/fill.mjs';

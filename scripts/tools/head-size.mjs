@@ -11,12 +11,16 @@ slider.oninput = (event) => {
     sizeBg.style.height = diameter + 'px';
 }
 
-sizeButton.onclick = () => {
-    sliderContainer.style.visibility = 'visible';
-}
+// sizeButton.onclick = () => {
+//     sliderContainer.style.visibility = 'visible';
+// }
 
 window.document.addEventListener('pointerdown', (event) => {
-    if (!sliderContainer.contains(event.target) && event.target !== sliderContainer) {
+    const parentDiv = sliderContainer.parentElement;
+    if (parentDiv.contains(event.target)) {
+        sliderContainer.style.visibility = 'visible';
+    }
+    else {
         sliderContainer.style.visibility = 'hidden';
     }
 });

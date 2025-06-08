@@ -18,14 +18,12 @@ const colorPicker = new window.iro.ColorPicker('#colorpicker', {
         {
             component: iro.ui.Slider,
             options: {
-                // can also be 'saturation', 'value', 'red', 'green', 'blue', 'alpha' or 'kelvin'
                 sliderType: 'hue',
             }
         },
         {
             component: iro.ui.Slider,
             options: {
-                // can also be 'saturation', 'value', 'red', 'green', 'blue', 'alpha' or 'kelvin'
                 sliderType: 'alpha',
             }
         },
@@ -40,11 +38,12 @@ colorPicker.on('color:change', function (newColor) {
     });
 });
 
-colorButton.onclick = () => {
-    colorDiv.style.visibility = 'visible';
-}
 window.document.addEventListener('pointerdown', (event) => {
-    if (!colorDiv.contains(event.target) && event.target !== colorDiv) {
+    const parentDiv = colorDiv.parentElement;
+    if (parentDiv.contains(event.target)) {
+        colorDiv.style.visibility = 'visible';
+    }
+    else {
         colorDiv.style.visibility = 'hidden';
     }
 });

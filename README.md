@@ -1,4 +1,4 @@
-# NewDraw - Web Tabanlı Dijital Çizim Uygulaması
+# Web Tabanlı Dijital Çizim Uygulaması
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
